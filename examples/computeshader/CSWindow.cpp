@@ -37,14 +37,14 @@ void CSWindow::initialize()
 
 void CSWindow::loadShaders()
 {
-	glow::Shader* vertexShader = glow::Shader::fromFile(GL_VERTEX_SHADER, "shaders/cstest.vert");
-	glow::Shader* fragmentShader = glow::Shader::fromFile(GL_FRAGMENT_SHADER, "shaders/cstest.frag");
+	glow::Shader* vertexShader = glow::Shader::fromFile(GL_VERTEX_SHADER, "data/computeshader/cstest.vert");
+	glow::Shader* fragmentShader = glow::Shader::fromFile(GL_FRAGMENT_SHADER, "data/computeshader/cstest.frag");
 
 	shaderProgram = new glow::Program();
 	shaderProgram->attach(vertexShader, fragmentShader);
 	shaderProgram->bindFragDataLocation(0, "outColor");
 
-	glow::Shader* computeShader = glow::Shader::fromFile(GL_COMPUTE_SHADER, "shaders/cstest.comp");
+	glow::Shader* computeShader = glow::Shader::fromFile(GL_COMPUTE_SHADER, "data/computeshader/cstest.comp");
 
 	computeProgram = new glow::Program();
 	computeProgram->attach(computeShader);

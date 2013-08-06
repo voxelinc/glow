@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 2.8.9 FATAL_ERROR)
 
 
-########################################
-# Project description
-########################################
+##
+## Project description
+##
+
 set(META_PROJECT_NAME        "glow")
 set(META_VERSION_MAJOR       "0")
 set(META_VERSION_MINOR       "1")
@@ -13,18 +14,19 @@ set(META_AUTHOR_ORGANIZATION "glow group")
 set(META_AUTHOR_DOMAIN       "https://github.com/cgcostume/glow/")
 
 
-########################################
-# Options
-########################################
+##
+## Options
+##
+
 option(OPTION_LIMIT_CONFIGS  "Generate limited configs (Release; Debug)" ON)
 option(OPTION_LOCAL_INSTALL  "Install to a local directory instead of the system" OFF)
 option(OPTION_BUILD_STATIC   "Build static libraries" OFF)
 option(OPTION_BUILD_EXAMPLES "Build examples" ON)
 
 
-########################################
-# CMake configuration
-########################################
+##
+## CMake configuration
+##
 
 set(GLOW_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -51,9 +53,9 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 include(cmake/Custom.cmake)
 
 
-########################################
-# Platform and architecture
-########################################
+##
+## Platform and architecture
+##
 
 # Architecture (32/64 bit)
 set(X64 OFF)
@@ -85,9 +87,10 @@ else()
 endif()
 
 
-########################################
-# Install locations
-########################################
+##
+## Install locations
+##
+
 set(project ${META_PROJECT_NAME})
 if(WIN32)
     set(INSTALL_BIN           ".")                      # C:\Programme\<project>
@@ -130,9 +133,9 @@ elseif(LINUX)
 endif()
 
 
-########################################
-# Get repository version
-########################################
+##
+## Get repository version
+##
 
 # Add a revision file containing the git-head tag for cpack and install
 include(GetGitRevisionDescription)
@@ -148,9 +151,9 @@ file(WRITE ${CMAKE_BINARY_DIR}/revision ${GIT_REV})
 # [TODO] Deal with GIT-NOTFOUND
 
 
-########################################
-# glowMETA_VERSION library
-########################################
+##
+## glow library
+##
 
 # Target
 set(target glow)
@@ -278,24 +281,26 @@ install(TARGETS ${target}
 )
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${INSTALL_INCLUDE})
 
-########################################
-# glow examples
-########################################
+
+##
+## glow examples
+##
 if(OPTION_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
 
-########################################
-# Deployment
-########################################
+##
+## Deployment
+##
+
 # Data files
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data
     DESTINATION ${INSTALL_DATA}
 )
 
 
-########################################
-# Packaging
-########################################
+##
+## Packaging
+##
 add_subdirectory(packages)

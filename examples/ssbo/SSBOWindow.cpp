@@ -34,8 +34,8 @@ void SSBOWindow::initialize()
 
 void SSBOWindow::loadShaders()
 {
-	glow::Shader* vertexShader = glow::Shader::fromFile(GL_VERTEX_SHADER, "shaders/ssbotest.vert");
-	glow::Shader* fragmentShader = glow::Shader::fromFile(GL_FRAGMENT_SHADER, "shaders/ssbotest.frag");
+	glow::Shader* vertexShader = glow::Shader::fromFile(GL_VERTEX_SHADER, "data/ssbo/ssbotest.vert");
+	glow::Shader* fragmentShader = glow::Shader::fromFile(GL_FRAGMENT_SHADER, "data/ssbo/ssbotest.frag");
 
 	shaderProgram = new glow::Program();
 	shaderProgram->attach(vertexShader, fragmentShader);

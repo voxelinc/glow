@@ -1,15 +1,16 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8)
 
-PROJECT(ComputeShaderDemo)
+# Project
+project(ComputeShaderExample)
+set(target computeshaderexample)
 
-SET(target computeshaderdemo)
-
-FIND_PACKAGE(OpenGL REQUIRED)
-FIND_PACKAGE(GLEW REQUIRED)
-FIND_PACKAGE(FREEGLUT REQUIRED)
+# Find externals
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(FREEGLUT REQUIRED)
 
 # Include directories
-INCLUDE_DIRECTORIES(
+include_directories(
 	.
 	..
 	${OPENGL_INCLUDE_DIR}
@@ -20,31 +21,30 @@ INCLUDE_DIRECTORIES(
 )
 
 # Libraries
-SET(libs
+set(libs
 	${GLEW_LIBRARIES}
 	${FREEGLUT_LIBRARY}
 	glow
 )
 
 # Sources
-SET(sources
+set(headers
+	CSWindow.h
+	../GlutWindow.h
+)
+set(sources
 	main.cpp
 	CSWindow.cpp
 	../GlutWindow.cpp
 )
 
-SET(headers
-	CSWindow.h
-	../GlutWindow.h
-)
-
-ADD_EXECUTABLE(${target} ${sources} ${headers})
-
-TARGET_LINK_LIBRARIES(${target} ${libs})
+# Build executable
+add_executable(${target} ${sources} ${headers})
+target_link_libraries(${target} ${libs})
 
 # Deployment
 install(TARGETS ${target}
     RUNTIME DESTINATION ${INSTALL_EXAMPLES}
-#    LIBRARY DESTINATION ${INSTALL_SHARED}
-#    ARCHIVE DESTINATION ${INSTALL_LIB}
+#  LIBRARY DESTINATION ${INSTALL_SHARED}
+#  ARCHIVE DESTINATION ${INSTALL_LIB}
 )
