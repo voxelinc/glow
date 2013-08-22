@@ -4,4 +4,7 @@ add_subdirectory("deferred-lighting")
 add_subdirectory("simple-texture")
 add_subdirectory("simple-transformfeedback")
 add_subdirectory("single-context")
+
+add_subdirectory("oculusrift")
+
 #add_subdirectory("ssbo")
