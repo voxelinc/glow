@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-set(target computeshader)
+set(target oculusrift)
 project(${target})
 
 find_package(OpenGL REQUIRED)
