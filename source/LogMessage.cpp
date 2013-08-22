@@ -17,7 +17,7 @@ LogMessage::Level LogMessage::level() const
 	return m_level;
 }
 
-const std::string& LogMessage::message() const
+const std::string & LogMessage::message() const
 {
 	return m_message;
 }
@@ -50,9 +50,21 @@ LogMessageBuilder& LogMessageBuilder::operator<<(const char * c)
 	return *this;
 }
 
+LogMessageBuilder& LogMessageBuilder::operator<<(const wchar_t * c)
+{
+    return operator<<(std::wstring(c));
+}
+
 LogMessageBuilder& LogMessageBuilder::operator<<(const std::string & str)
 {
 	write(str.c_str(), str.length());
+	return *this;
+}
+
+LogMessageBuilder& LogMessageBuilder::operator<<(const std::wstring & str)
+{
+    std::string s(str.begin(), str.end());
+	write(s.c_str(), s.length());
 	return *this;
 }
 
@@ -65,6 +77,18 @@ LogMessageBuilder& LogMessageBuilder::operator<<(bool b)
 LogMessageBuilder& LogMessageBuilder::operator<<(char c)
 {
 	std::stringstream::operator<<(c);
+	return *this;
+}
+
+LogMessageBuilder& LogMessageBuilder::operator<<(short s)
+{
+	std::stringstream::operator<<(s);
+	return *this;
+}
+
+LogMessageBuilder& LogMessageBuilder::operator<<(unsigned short us)
+{
+	std::stringstream::operator<<(us);
 	return *this;
 }
 

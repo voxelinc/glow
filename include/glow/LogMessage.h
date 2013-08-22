@@ -65,19 +65,23 @@ public:
 	virtual ~LogMessageBuilder();
 
 	// primitive types
-	LogMessageBuilder& operator<<(const char* c);
-	LogMessageBuilder& operator<<(const std::string& str);
-	LogMessageBuilder& operator<<(bool b);
-	LogMessageBuilder& operator<<(char c);
-	LogMessageBuilder& operator<<(int i);
-	LogMessageBuilder& operator<<(float f);
-	LogMessageBuilder& operator<<(double d);
-    LogMessageBuilder& operator<<(long double d);
-	LogMessageBuilder& operator<<(unsigned u);
-	LogMessageBuilder& operator<<(long l);
-	LogMessageBuilder& operator<<(unsigned long ul);
-	LogMessageBuilder& operator<<(unsigned char uc);
-	LogMessageBuilder& operator<<(void* pointer);
+	LogMessageBuilder & operator<<(const char * c);
+    LogMessageBuilder & operator<<(const wchar_t * c);
+	LogMessageBuilder & operator<<(bool b);
+	LogMessageBuilder & operator<<(char c);
+    LogMessageBuilder & operator<<(unsigned char uc);
+    LogMessageBuilder & operator<<(short s);
+    LogMessageBuilder & operator<<(unsigned short us);
+    LogMessageBuilder & operator<<(int i);
+    LogMessageBuilder & operator<<(unsigned int ui);
+    LogMessageBuilder & operator<<(float f);
+	LogMessageBuilder & operator<<(double d);
+    LogMessageBuilder & operator<<(long double d);
+	LogMessageBuilder & operator<<(long l);
+	LogMessageBuilder & operator<<(unsigned long ul);
+	LogMessageBuilder & operator<<(void * pointer);
+    LogMessageBuilder & operator<<(const std::string & str);
+    LogMessageBuilder & operator<<(const std::wstring & str);
 
 	// manipulators
 	LogMessageBuilder& operator<<(std::ostream& (*manipulator)(std::ostream&));

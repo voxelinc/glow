@@ -1,9 +1,9 @@
 #version 330
 
-in vec2 v_uv;
+in vec3 v_vertex;
 layout (location = 0) out vec4 fragColor;
 
 void main()
 {
-	fragColor = vec4(1.f, 1.f, 1.f, 1.f);
+	fragColor = vec4(v_vertex * 0.5 + 0.5, 1.f);
 }
