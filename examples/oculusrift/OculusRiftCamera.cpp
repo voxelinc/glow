@@ -1,4 +1,4 @@
-#include <glow/OculusRiftCamera.h>
+#include "OculusRiftCamera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>

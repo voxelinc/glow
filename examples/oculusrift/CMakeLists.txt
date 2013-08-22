@@ -7,12 +7,15 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 
 include_directories(
+	.
 	${GLOW_INCLUDE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_executable(${target} 
 	main.cpp
+	OculusRiftCamera.h
+	OculusRiftCamera.cpp
 )
 
 target_link_libraries(${target} 
