@@ -56,32 +56,21 @@ public:
     	int side = std::min<int>(width, height);
 	    glViewport((width - side) / 2, (height - side) / 2, side, side);
 
-	    m_shaderProgram->setUniform("modelView", glm::mat4());
-	    m_shaderProgram->setUniform("projection", glm::ortho(0.f, 1.f, 0.f, 1.f, 0.f, 1.f));
+	    m_program->setUniform("modelView", glm::mat4());
+	    m_program->setUniform("projection", glm::ortho(0.f, 1.f, 0.f, 1.f, 0.f, 1.f));
     }
 
     virtual void paintEvent(Window & window)
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        ++m_frame %= 628;
-
-	    m_computeProgram->setUniform("roll", static_cast<float>(m_frame) * 0.01f);
-
-	    m_texture->bind();
-
-	    m_computeProgram->use();
-	    glDispatchCompute(512/16, 512/16, 1); // 512^2 threads in blocks of 16^2
-	    m_computeProgram->release();
-
-	    m_shaderProgram->use();
+	    m_program->use();
 
 	    m_vao->bind();
 	    m_vertexBuffer->drawArrays(GL_TRIANGLE_FAN, 0, 4);
 	    m_vao->unbind();
 
-        m_shaderProgram->release();
-	    m_texture->unbind();
+        m_program->release();
     }
 
     virtual void idleEvent(Window & window)
@@ -98,11 +87,7 @@ public:
     }
 
 protected:
-	glow::ref_ptr<glow::Texture> m_texture;
-
-    glow::ref_ptr<glow::Program> m_computeProgram;
-	glow::ref_ptr<glow::Program> m_shaderProgram;
-	
+	glow::ref_ptr<glow::Program> m_program;	
     glow::ref_ptr<glow::VertexArrayObject> m_vao;
 	
     glow::ref_ptr<glow::Buffer> m_vertexBuffer;
@@ -132,40 +117,32 @@ int main(int argc, char** argv)
 
 void EventHandler::createAndSetupTexture()
 {
-	m_texture = new glow::Texture(GL_TEXTURE_2D);
+	//m_texture = new glow::Texture(GL_TEXTURE_2D);
 
-    m_texture->setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	m_texture->setParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //m_texture->setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//m_texture->setParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	m_texture->image2D(0, GL_R32F, 512, 512, 0, GL_RED, GL_FLOAT, nullptr);
-	m_texture->bindImageTexture(0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+	//m_texture->image2D(0, GL_R32F, 512, 512, 0, GL_RED, GL_FLOAT, nullptr);
+	//m_texture->bindImageTexture(0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 }
 
 void EventHandler::createAndSetupShaders()
 {
-	glow::Shader* vertexShader = glow::Shader::fromFile(GL_VERTEX_SHADER, "data/computeshader/cstest.vert");
-	glow::Shader* fragmentShader = glow::Shader::fromFile(GL_FRAGMENT_SHADER, "data/computeshader/cstest.frag");
+	glow::Shader* vertexShader = glow::Shader::fromFile(GL_VERTEX_SHADER, "data/oculusrift/glslrift.vert");
+	glow::Shader* fragmentShader = glow::Shader::fromFile(GL_FRAGMENT_SHADER, "data/oculusrift/glslrift.frag");
 
-	m_shaderProgram = new glow::Program();
-	m_shaderProgram->attach(vertexShader, fragmentShader);
-	m_shaderProgram->bindFragDataLocation(0, "fragColor");
-
-	glow::Shader* computeShader = glow::Shader::fromFile(GL_COMPUTE_SHADER, "data/computeshader/cstest.comp");
-
-	m_computeProgram = new glow::Program();
-	m_computeProgram->attach(computeShader);
-
-	m_shaderProgram->setUniform("texture", 0);
-	m_computeProgram->setUniform("destTex", 0);
+	m_program = new glow::Program();
+	m_program->attach(vertexShader, fragmentShader);
+	m_program->bindFragDataLocation(0, "fragColor");
 }
 
 void EventHandler::createAndSetupGeometry()
 {
     auto vertexArray = glow::Vec3Array()
-        << glm::vec3( 0, 0, 0) 
-        << glm::vec3( 1, 0, 0) 
-        << glm::vec3( 1, 1, 0) 
-        << glm::vec3( 0, 1, 0);
+        << glm::vec3( 0.2, 0.2, 0.2) 
+        << glm::vec3( 0.2, 0.2, 0.2) 
+        << glm::vec3( 0.8, 0.8, 0.2) 
+        << glm::vec3( 0.2, 0.8, 0.2);
 
 	m_vao = new glow::VertexArrayObject();
 
@@ -176,5 +153,5 @@ void EventHandler::createAndSetupGeometry()
 	binding->setBuffer(m_vertexBuffer, 0, sizeof(glm::vec3));
 	binding->setFormat(3, GL_FLOAT);
 
-	m_vao->enable(m_shaderProgram->getAttributeLocation("a_vertex"));
+	m_vao->enable(m_program->getAttributeLocation("a_vertex"));
 }
