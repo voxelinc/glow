@@ -1,4 +1,12 @@
 
+// This class was based on the OpenHMD project's c api in packet.c, rift.c/h
+
+// * OpenHMD - Free and Open Source API and drivers for immersive technology.
+// * Copyright (C) 2013 Fredrik Hultin.
+// * Copyright (C) 2013 Jakob Bornecrantz.
+// * Distributed under the Boost 1.0 licence, see LICENSE for full text.
+
+
 #include <cassert>
 #include <algorithm>
 
