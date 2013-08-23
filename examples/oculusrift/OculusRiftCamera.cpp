@@ -52,6 +52,8 @@ glm::vec4 OculusRiftCamera::leftMatrices(glm::mat4& modelView, glm::mat4& projec
 		m_center + r + m_eye,
 		m_up
 	);
+
+    return glm::vec4();
 }
 
 glm::vec4 OculusRiftCamera::rightMatrices(glm::mat4& modelView, glm::mat4& projection)
@@ -82,6 +84,8 @@ glm::vec4 OculusRiftCamera::rightMatrices(glm::mat4& modelView, glm::mat4& proje
 		m_center - r + m_eye,
 		m_up
 	);
+
+    return glm::vec4();
 }
 
 const glm::vec3& OculusRiftCamera::center() const

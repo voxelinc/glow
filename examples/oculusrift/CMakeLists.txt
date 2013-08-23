@@ -16,8 +16,10 @@ include_directories(
 
 add_executable(${target} 
 	main.cpp
-	OculusRiftCamera.h
+	OculusRift.cpp
+	OculusRift.h
 	OculusRiftCamera.cpp
+	OculusRiftCamera.h
 )
 
 target_link_libraries(${target} 

@@ -5,8 +5,6 @@
 #include <random>
 #include <string>
 
-#include <hidapi.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -23,6 +21,8 @@
 #include <glow/WindowEventHandler.h>
 #include <glow/logging.h>
 
+#include "OculusRift.h"
+
 
 using namespace glow;
 
@@ -31,55 +31,8 @@ class EventHandler : public WindowEventHandler
 public:
     EventHandler()
     :   m_frame(0)
-    ,   m_trackerdk(nullptr)
+    ,   m_oculusRift(new OculusRift())
     {
-        hid_device_info * device = hid_enumerate(NULL, NULL);
-    
-        // find oculus rift dev kit 1 from oculus vr, inc.
-        while (device && 0x2833 != device->vendor_id && 0x1 != device->product_id)
-            device = device->next;
-
-            //if (device->manufacturer_string)
-            //    warning() << std::wstring(device->manufacturer_string) << " (manufacturer_string)";
-
-            //if (device->product_string)
-            //    warning() << std::wstring(device->product_string) << " (product_string)";
-
-            //warning() << device->product_id << " (product_id)"; 
-            //warning() << device->interface_number << " (interface_number)"; 
-            //warning() << device->release_number << " (release_number)";
-            //warning() << device->vendor_id << " (vendor_id)";
-            //warning() << device->serial_number << " (serial_number)" << std::endl;
-
-        const bool trackerdk_found = nullptr != device;
-        hid_free_enumeration(device);
-
-        if (!trackerdk_found)
-        {
-            fatal() << "Could not find Oculus VR's Tracker DK (Vendor 10291, Product 1).";
-            return;
-        }
-
-        m_trackerdk = hid_open(0x2833, 0x1, NULL);
-        if (!m_trackerdk)
-        {
-            fatal() << "Could not conntext to Oculus VR's Tracker DK.";
-            return;
-        }
-
-        unsigned char fr [32];
-        int fr_size = 0;
-        for (unsigned char i = 2; i < 11; ++i)
-        {
-            fr [0] = i;
-            fr_size = hid_get_feature_report(m_trackerdk, fr, 32);
-
-            std::stringstream stream;
-            for(int s = 0; s < fr_size; ++s)
-                stream << static_cast<int>(fr[s]) << " ";
-
-            warning() << stream.str();
-        }
     }
 
     virtual ~EventHandler()
@@ -129,8 +82,6 @@ public:
 
     virtual void idleEvent(Window & window)
     {
-        //hid_read(m_trackerdk
-
         window.repaint();
     }
 
@@ -143,7 +94,7 @@ public:
     }
 
 protected:
-    hid_device * m_trackerdk;
+    OculusRift * m_oculusRift;
 
 	glow::ref_ptr<glow::Program> m_program;	
     glow::ref_ptr<glow::VertexArrayObject> m_vao;
