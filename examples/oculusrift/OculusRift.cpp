@@ -20,6 +20,8 @@ using namespace glow;
 hid_device * OculusRift::s_trackerdk(nullptr);
 unsigned int OculusRift::s_refcount(0);
 
+OculusRift::Clock::time_point OculusRift::s_lastKeepAlive;
+
 OculusRift::SensorRange OculusRift::s_sensorRange;
 OculusRift::SensorDisplayInfo OculusRift::s_sensorDisplayInfo;
 OculusRift::SensorConfig OculusRift::s_sensorConfig;
@@ -121,6 +123,25 @@ void OculusRift::Buffer::read_i21(int i[3]) const
     pbuffer += 8;
 }
 
+void OculusRift::Buffer::write_uc(const unsigned char uc)
+{
+    *(pbuffer++) = uc;
+}
+
+void OculusRift::Buffer::write_us(const unsigned short us)
+{
+    *(pbuffer++) =  us       & 0xff;
+    *(pbuffer++) = (us >> 8) & 0xff;
+}
+
+void OculusRift::Buffer::write_ui(const unsigned int   ui)
+{
+    *(pbuffer++) =  ui        & 0xff;
+    *(pbuffer++) = (ui >>  8) & 0xff;
+    *(pbuffer++) = (ui >> 16) & 0xff;
+    *(pbuffer++) = (ui >> 24) & 0xff;
+}
+
 OculusRift::Buffer::operator unsigned char *()
 {
     return buffer;
@@ -129,8 +150,8 @@ OculusRift::Buffer::operator unsigned char *()
 
 OculusRift::OculusRift()   
 {
-    ++s_refcount;
     trackerdk();
+    ++s_refcount;
 }
 
 OculusRift::~OculusRift()
@@ -143,8 +164,6 @@ OculusRift::~OculusRift()
 
 hid_device * OculusRift::trackerdk()
 {
-    assert(s_refcount > 0);
-
     if (nullptr == s_trackerdk)
         open();
 
@@ -157,7 +176,8 @@ bool OculusRift::open()
         return true;
 
     hid_init();
-    s_trackerdk = hid_open(0x2833, 0x1, NULL);
+
+    s_trackerdk = hid_open(OculusVRVendorID, DevkitID, NULL);
 
     if (!s_trackerdk)
     {
@@ -166,6 +186,18 @@ bool OculusRift::open()
     }
 
     readFeatures();
+
+    return initialize();
+}
+
+bool OculusRift::initialize()
+{
+    if (-1 == hid_set_nonblocking(s_trackerdk, 1))
+    {
+        warning() << "OculusRift: Setting non-blocking mode failed.";
+        return false;
+    }
+
     return true;
 }
 
@@ -182,20 +214,45 @@ void OculusRift::readFeatures()
 {
     Buffer buffer;
 
-    decodeSensorRange(s_sensorRange, buffer, feature(RangeFeature, buffer));
+    decodeSensorRange(s_sensorRange, buffer, readFeature(RangeFeature, buffer));
     buffer.reset();
-    decodeSensorDisplayInfo(s_sensorDisplayInfo, buffer, feature(DisplayInfoFeature, buffer));
+    decodeSensorDisplayInfo(s_sensorDisplayInfo, buffer, readFeature(DisplayInfoFeature, buffer));
     buffer.reset();
-    decodeSensorConfig(s_sensorConfig, buffer, feature(ConfigFeature, buffer));
+    decodeSensorConfig(s_sensorConfig, buffer, readFeature(ConfigFeature, buffer));
     buffer.reset();
 }
 
-int OculusRift::feature(
+int OculusRift::readFeature(
     const SensorFeature enumerator
 ,   Buffer & buffer)
 {
     buffer[0] = static_cast<unsigned char>(enumerator);
-	return hid_get_feature_report(trackerdk(), buffer, Buffer::BufferSize);
+
+    const int s = hid_get_feature_report(trackerdk(), buffer, Buffer::BufferSize);
+
+    if (-1 == s)
+        warning() << "OculusRift: Requesting feature failed.";
+
+    return s;
+}
+
+bool OculusRift::writeFeature(
+    Buffer & buffer
+,   const int size)
+{
+    const int s = hid_send_feature_report(trackerdk(), buffer, size);
+    if (-1 == s)
+    {
+        warning() << "OculusRift: Sending feature failed.";
+        return false;
+    }
+
+    if (size != s)
+    {
+       warning() << "OculusRift: Sending feature returned invalid packet size.";
+       return false;
+    }
+	return true;
 }
 
 bool OculusRift::decodeSensorRange(
@@ -279,6 +336,30 @@ bool OculusRift::decodeSensorConfig(
     return true;
 }
 
+int OculusRift::encodeSensorConfig(
+    SensorConfig & sensorConfig
+,   Buffer & buffer)
+{
+    buffer.write_uc(ConfigFeature);
+    buffer.write_us(sensorConfig.commandId);
+    buffer.write_uc(sensorConfig.flags);
+    buffer.write_uc(sensorConfig.packetInterval);
+    buffer.write_us(sensorConfig.keepAliveInterval);
+
+    return SensorConfig::FeatureSize; 
+}
+
+int OculusRift::encodeKeepAlive(
+    KeepAlive & keepAlive
+,   Buffer & buffer)
+{
+    buffer.write_uc(KeepAliveFeature);
+    buffer.write_us(keepAlive.commandId);
+    buffer.write_us(keepAlive.keepAliveInterval);
+
+    return KeepAlive::FeatureSize; 
+}
+
 bool OculusRift::decodeTrackerMessage(
     TrackerMessage & message
 ,   const Buffer & buffer
@@ -313,12 +394,88 @@ bool OculusRift::decodeTrackerMessage(
     return true;
 }
 
-//bool OculusRift::encodeKeepAlive(KeepAlive & keepAlive)
-//{
-//
-//}
+void OculusRift::decodeVec3f(
+    std::array<float, 3> & vec3f
+,   const int vec3i[3]
+,   const float scale)
+{
+    vec3f[0] = static_cast<float>(vec3i[0]) * scale;
+    vec3f[1] = static_cast<float>(vec3i[1]) * scale;
+    vec3f[2] = static_cast<float>(vec3i[2]) * scale;
+}
 
+void OculusRift::handleTrackerMessage(
+    const Buffer & buffer
+,   const int size)
+{
+    if (!decodeTrackerMessage(m_trackerMessage, buffer, size))
+    {
+        warning() << "OculusRift: Decoding tracker message failed.";
+        return;
+    }
 
+    // TODO: handle missed samples!
+
+    const char n = std::min<unsigned char>(3, m_trackerMessage.numSamples);
+    if (n == 0)
+        return;
+    
+    decodeVec3f(m_rawAccel, m_trackerMessage.samples[n - 1].accel, 1e-4f);
+    decodeVec3f(m_rawGyro, m_trackerMessage.samples[n - 1].gyro, 1e-4f); 
+}
+
+void OculusRift::update()
+{
+    if (nullptr == trackerdk())
+        return;
+
+    Buffer buffer;
+
+    const Clock::time_point now(Clock::now());
+    const milliseconds t = std::chrono::duration_cast<milliseconds>(now - s_lastKeepAlive);
+
+    if (static_cast<unsigned short>(t.count()) > s_sensorConfig.keepAliveInterval)
+    {
+        KeepAlive keepAlive = { 0, s_sensorConfig.keepAliveInterval };
+        writeFeature(buffer, encodeKeepAlive(keepAlive, buffer));
+
+        s_lastKeepAlive = now;
+    }
+
+    do
+    {
+        const int size = hid_read(trackerdk(), buffer, Buffer::BufferSize);
+        if (0 > size)
+        {
+            warning() << "OculusRift: Reading from device failed.";
+            return;
+        }
+        else if (0 == size)
+            return;
+
+        switch (buffer[0])
+        {
+        case TrackerMessageType:
+            handleTrackerMessage(buffer, size);
+            break;
+
+        default:
+            debug() << "OculusRift: Unknown message type " << buffer[0] << ".";
+            break;
+        }
+
+    } while (true);
+}
+
+const std::array<float, 3> & OculusRift::rawAccel() const
+{
+    return m_rawAccel;
+}
+
+const std::array<float, 3> & OculusRift::rawGyro() const
+{
+    return m_rawGyro;
+}
 
 
 //unsigned char OculusRift::accelScale()
@@ -336,66 +493,83 @@ bool OculusRift::decodeTrackerMessage(
 //    return s_sensorRange.magScale;
 //}
 
-unsigned short OculusRift::hResolution()
+unsigned short OculusRift::hResolution() const
 {
     return s_sensorDisplayInfo.hResolution;
 }
 
-unsigned short OculusRift::vResolution()
+unsigned short OculusRift::vResolution() const
 {
     return s_sensorDisplayInfo.vResolution;
 }
 
-float OculusRift::hScreenSize()
+float OculusRift::hScreenSize() const
 {
     return s_sensorDisplayInfo.hScreenSize;
 }
 
-float OculusRift::vScreenSize()
+float OculusRift::vScreenSize() const
 {
     return s_sensorDisplayInfo.vScreenSize;
 }
 
-float OculusRift::vCenter()
+float OculusRift::vCenter() const
 {
     return s_sensorDisplayInfo.vCenter;
 }
 
-float OculusRift::eyeToScreenDistance()
+float OculusRift::eyeToScreenDistance() const
 {
     return s_sensorDisplayInfo.eyeToScreenDistance[0] + s_sensorDisplayInfo.eyeToScreenDistance[1];
 }
 
-float OculusRift::eyeToLensDistance()
+float OculusRift::eyeToLensDistance() const
 {
     return s_sensorDisplayInfo.eyeToScreenDistance[0];
 }
 
-float OculusRift::lensToScreenDistance()
+float OculusRift::lensToScreenDistance() const
 {
     return s_sensorDisplayInfo.eyeToScreenDistance[1];
 }
 
-float OculusRift::lensSeparation()
+float OculusRift::lensSeparation() const
 {
     return s_sensorDisplayInfo.lensSeparation;
 }
 
-OculusRift::DistortionType OculusRift::distortionType()
+OculusRift::DistortionType OculusRift::distortionType() const
 {
     return s_sensorDisplayInfo.distortionType;
 }
 
-void OculusRift::distortionK(float coefficients[6])
+void OculusRift::distortionK(float coefficients[6]) const
 {
     for (int i = 0; i < 6; ++i)
         coefficients[i] = s_sensorDisplayInfo.distortionK[i];
 }
 
-//unsigned char OculusRift::flags()
-//{
-//    return s_sensorConfig.flags;
-//}
+unsigned char OculusRift::flags() const
+{
+    return s_sensorConfig.flags;
+}
+
+bool OculusRift::setFlags(const unsigned char flags)
+{
+    if (flags == s_sensorConfig.flags)
+        return true;
+
+    s_sensorConfig.flags = flags;
+
+    Buffer buffer;
+
+    writeFeature(buffer, encodeSensorConfig(s_sensorConfig, buffer));
+    buffer.reset();
+    decodeSensorConfig(s_sensorConfig, buffer, readFeature(ConfigFeature, buffer));
+
+    return flags == s_sensorConfig.flags;
+}
+
 //
 //unsigned char OculusRift::packetInterval()
 //{

@@ -24,6 +24,14 @@
 #include "OculusRift.h"
 
 
+void test(float t[4])
+{
+    t [0] = 0.f;
+    t [1] = 1.f;
+    t [2] = 2.f;
+    t [3] = 3.f;
+}
+
 using namespace glow;
 
 class EventHandler : public WindowEventHandler
@@ -33,10 +41,17 @@ public:
     :   m_frame(0)
     ,   m_oculusRift(new OculusRift())
     {
+        //warning() << "coordinateframe " << m_oculusRift->flags();
+
+        //if (m_oculusRift->flags() & ~OculusRift::SensorCoordinates)
+        //    m_oculusRift->setFlags(m_oculusRift->flags() | OculusRift::SensorCoordinates);
+
+        //warning() << "coordinateframe " << m_oculusRift->flags();
     }
 
     virtual ~EventHandler()
     {
+        delete m_oculusRift;
     }
 
     void createAndSetupTexture();
@@ -82,6 +97,7 @@ public:
 
     virtual void idleEvent(Window & window)
     {
+        m_oculusRift->update();
         window.repaint();
     }
 
