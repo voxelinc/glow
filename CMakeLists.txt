@@ -17,7 +17,7 @@ set(META_AUTHOR_DOMAIN       "https://github.com/hpicgs/glow/")
 option(OPTION_LIMIT_CONFIGS  "Generate limited configs (Release; Debug)" ON)
 option(OPTION_LOCAL_INSTALL  "Install to a local directory instead of the system" OFF)
 option(OPTION_BUILD_STATIC   "Build static libraries" OFF)
-option(OPTION_BUILD_EXAMPLES "Build examples" OFF)
+#option(OPTION_BUILD_EXAMPLES "Build examples" ON)
 option(OPTION_ERRORS_AS_EXCEPTION "Throw exceptions" OFF)
 
 
@@ -128,7 +128,7 @@ else()
     endif()
 endif()
 
-install(DIRECTORY ${GLOW_SOURCE_DIR}/include/ DESTINATION ${INSTALL_INCLUDE})
+#install(DIRECTORY ${GLOW_SOURCE_DIR}/include/ DESTINATION ${INSTALL_INCLUDE})
 
 
 # GET REPOSITORY VERSION
@@ -142,14 +142,14 @@ string(SUBSTRING ${GIT_SHA1} 0 12 GIT_REV)
 file(WRITE ${CMAKE_BINARY_DIR}/revision ${GIT_REV})
 
 # [TODO] Really?? Do we want this deployed?
-install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION .)
+#install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION .)
 
 # [TODO] Deal with GIT-NOTFOUND
 
 
 # Generate meta-header
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/source/glow-version.h.in ${CMAKE_CURRENT_BINARY_DIR}/glow/glow-version.h)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/glow/glow-version.h DESTINATION ${INSTALL_INCLUDE}/glow)
+#install(FILES ${CMAKE_CURRENT_BINARY_DIR}/glow/glow-version.h DESTINATION ${INSTALL_INCLUDE}/glow)
 
 
 # GLOW DEPENDENCIES
@@ -171,7 +171,7 @@ include_directories(
 # GLOW LIBRARIES
 
 add_subdirectory(source)
-install(FILES glow-config.cmake DESTINATION ".")
+#install(FILES glow-config.cmake DESTINATION ".")
 
 
 # EXAMPLES
@@ -181,4 +181,4 @@ if(OPTION_BUILD_EXAMPLES)
 endif()
 
 # Packaging
-add_subdirectory(packages)
+#add_subdirectory(packages)
