@@ -87,6 +87,15 @@ GLint Texture::getLevelParameter(GLint level, GLenum pname)
 	return value;
 }
 
+
+void Texture::compressedImage2D(GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data)
+{
+	bind();
+
+	glCompressedTexImage2D(m_target, level, internalFormat, width, height, border, imageSize, data);
+	CheckGLError();
+}
+
 void Texture::image2D(GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data)
 {
 	bind();
