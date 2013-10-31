@@ -96,11 +96,11 @@ void Texture::compressedImage2D(GLint level, GLint internalFormat, GLsizei width
 	CheckGLError();
 }
 
-void Texture::compressedImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data)
+void Texture::compressedImage2D(GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data, GLenum targetOverride)
 {
 	bind();
 
-	glCompressedTexImage2D(target, level, internalFormat, width, height, border, imageSize, data);
+	glCompressedTexImage2D(targetOverride, level, internalFormat, width, height, border, imageSize, data);
 	CheckGLError();
 }
 
@@ -112,11 +112,11 @@ void Texture::image2D(GLint level, GLint internalFormat, GLsizei width, GLsizei 
 	CheckGLError();
 }
 
-void Texture::image2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data)
+void Texture::image2D(GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data, GLenum targetOverride)
 {
 	bind();
 
-	glTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
+	glTexImage2D(targetOverride, level, internalFormat, width, height, border, format, type, data);
 	CheckGLError();
 }
 
