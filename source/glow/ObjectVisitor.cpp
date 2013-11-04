@@ -1,3 +1,6 @@
+
+#include <glow/Object.h>
+
 #include <glow/ObjectVisitor.h>
 
 namespace glow

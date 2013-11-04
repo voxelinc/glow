@@ -1,4 +1,10 @@
 
+#include <glow/Program.h>
+#include <glow/VertexArrayObject.h>
+#include <glow/Texture.h>
+#include <glow/Buffer.h>
+#include <glow/Shader.h>
+
 #include <glowutils/ScreenAlignedQuad.h>
 
 namespace glow 

@@ -1,10 +1,15 @@
-#include <glow/FrameBufferObject.h>
 
 #include <glow/logging.h>
 #include <glow/Error.h>
 #include <glow/ObjectVisitor.h>
 #include <glow/TextureAttachment.h>
+#include <glow/FrameBufferAttachment.h>
 #include <glow/RenderBufferAttachment.h>
+#include <glow/Buffer.h>
+#include <glow/RenderBufferObject.h>
+#include <glow/Texture.h>
+
+#include <glow/FrameBufferObject.h>
 
 namespace glow
 {

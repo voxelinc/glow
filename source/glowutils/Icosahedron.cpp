@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 #include <glow/VertexArrayObject.h>
+#include <glow/VertexAttributeBinding.h>
 #include <glow/Buffer.h>
 
 #include <glowutils/Icosahedron.h>
@@ -105,10 +106,6 @@ Icosahedron::Icosahedron(
 
 Icosahedron::~Icosahedron()
 {
-    delete m_vao;
-
-    delete m_indices;
-    delete m_vertices;
 }
 
 void Icosahedron::draw()
@@ -176,6 +173,5 @@ lowp_uint Icosahedron::split(
 
     return i;
 }
-
 
 } // namespace glow

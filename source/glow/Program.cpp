@@ -3,11 +3,13 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include <glow/Program.h>
 #include <glow/logging.h>
-#include <glow/Uniform.h>
 #include <glow/Error.h>
+#include <glow/Uniform.h>
 #include <glow/ObjectVisitor.h>
+#include <glow/Shader.h>
+
+#include <glow/Program.h>
 
 namespace glow
 {

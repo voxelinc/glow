@@ -13,7 +13,10 @@
 #include <glow/Array.h>
 #include <glow/ShaderFile.h>
 #include <glow/Program.h>
+#include <glow/Shader.h>
+#include <glow/Buffer.h>
 #include <glow/VertexArrayObject.h>
+#include <glow/VertexAttributeBinding.h>
 #include <glowwindow/ContextFormat.h>
 #include <glow/Error.h>
 #include <glow/logging.h>
@@ -93,7 +96,7 @@ public:
         Window & window
     ,   KeyEvent & event)
     {
-        if (KeyEvent::KeyF5 == event.key())
+        if (GLFW_KEY_F5 == event.key())
             glow::ShaderFile::reloadAll();
     }
 

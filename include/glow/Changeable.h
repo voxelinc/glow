@@ -3,18 +3,19 @@
 #include <set>
 
 #include <glow/glow.h>
-#include <glow/ChangeListener.h>
 
 namespace glow 
 {
 
-/**
- * \brief A Changeable is the superclass of all objects that want others to signal that they have changed.
- * 
- * It implements the observer pattern.
- * Listeners to the subclass change can be registered using registerListener() and deregistered using deregisterListener().
- * 
- * \see ChangeListener
+class ChangeListener;
+
+
+/** \brief Superclass of all objects that want others to signal that they have changed.
+    
+    It implements the observer pattern. Listeners to the subclass change can be
+    registered using registerListener() and deregistered using deregisterListener().
+    
+    \see ChangeListener
  */
 class GLOW_API Changeable
 {

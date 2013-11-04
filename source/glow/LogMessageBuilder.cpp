@@ -1,4 +1,3 @@
-#include <glow/LogMessageBuilder.h>
 
 #include <glow/logging.h>
 #include <glow/Object.h>
@@ -13,9 +12,12 @@
 #include <glow/VertexArrayObject.h>
 #include <glow/Version.h>
 
-namespace glow {
+#include <glow/LogMessageBuilder.h>
 
-LogMessageBuilder::LogMessageBuilder(LogMessage::Level level, AbstractLogHandler* handler)
+namespace glow 
+{
+
+LogMessageBuilder::LogMessageBuilder(LogMessage::Level level, AbstractLogHandler * handler)
 : std::stringstream()
 , m_level(level)
 , m_handler(handler)

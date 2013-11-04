@@ -3,16 +3,17 @@
 #include <glow/glow.h>
 #include <glow/Object.h>
 
-namespace glow {
+namespace glow 
+{
 
-/**
- * \brief The Texture class wraps an OpenGL texture object.
- *
- * A Texture provides both interfaces to bind them for the OpenGL pipeline: binding and bindless texture.
- * Bindless textures are only available if the graphics driver supports them (NV extension).
- *
- * \see http://www.opengl.org/wiki/Texture
- * \see http://www.opengl.org/registry/specs/NV/bindless_texture.txt
+/** \brief Wraps OpenGL texture objects.
+    
+    A Texture provides both interfaces to bind them for the OpenGL pipeline:
+    binding and bindless texture. Bindless textures are only available if the
+    graphics driver supports them (NV extension).
+    
+    \see http://www.opengl.org/wiki/Texture
+    \see http://www.opengl.org/registry/specs/NV/bindless_texture.txt
  */
 class GLOW_API Texture : public Object
 {
@@ -21,7 +22,7 @@ public:
 	{
 	public:
 		Handle();
-		Handle(const GLuint64& value);
+		Handle(const GLuint64 & value);
 
 		operator GLuint64() const;
 
@@ -32,7 +33,7 @@ public:
 	Texture(GLuint id, GLenum  target, bool ownsGLObject = true);
 	virtual ~Texture();
 
-	virtual void accept(ObjectVisitor& visitor);
+	virtual void accept(ObjectVisitor & visitor);
 
 	void bind();
 	void unbind();
@@ -51,7 +52,13 @@ public:
 	void image2D(GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data, GLenum targetOverride);
 	void storage2D(GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height);
 
-	void bindImageTexture(GLuint unit, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format);
+	void bindImageTexture(
+        GLuint unit
+    ,   GLint level
+    ,   GLboolean layered
+    ,   GLint layer
+    ,   GLenum access
+    ,   GLenum format);
 
 	void generateMipmap();
 
@@ -60,10 +67,12 @@ public:
 	GLboolean isResident() const;
 	Handle makeResident();
 	void makeNonResident();
+
+protected:
+    static GLuint genTexture();
+
 protected:
     GLenum m_target;
-
-	static GLuint genTexture();
 };
 
 } // namespace glow

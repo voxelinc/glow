@@ -11,14 +11,12 @@ namespace glow
 
 class Shader;
 
-/**
- * \brief The ShaderFile class is a ShaderSource for files.
- *
- * The file path of a ShaderFile can be queried using filePath();
- * To reload a shader from a file, use reload().
- * To reload all ShaderFiles, use reloadAll().
- *
- * \see ShaderSource
+/** \brief Shader source associated to a file.
+    
+    The file path of a ShaderFile can be queried using filePath(); To reload a
+    shader from a file, use reload(). To reload all ShaderFiles, use reloadAll().
+
+    \see ShaderSource
  */
 class GLOW_API ShaderFile : public ShaderSource
 {
@@ -29,7 +27,7 @@ public:
 	virtual const std::string & source();
 	virtual bool isFile() const;
 
-	const std::string& filePath() const;
+	const std::string & filePath() const;
 
 	void reload();
 	static void reloadAll();

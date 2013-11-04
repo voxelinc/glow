@@ -1,10 +1,12 @@
 #pragma once
 
 #include <glow/AbstractLogHandler.h>
+#include <glow/LogMessage.h>
 
-namespace glow {
+namespace glow 
+{
 
-/** \brief The ConsoleLogger class writes LogMessages to stdout.
+/** \brief Writes LogMessages to stdout.
 
 	This is the default LogMessage handler of glow.
 
@@ -14,7 +16,8 @@ namespace glow {
 class ConsoleLogger : public AbstractLogHandler
 {
 public:
-	void handle(const LogMessage& message) override;
+	void handle(const LogMessage & message) override;
+
 protected:
 	std::string levelString(LogMessage::Level level);
 };
