@@ -3,10 +3,9 @@
 #include <set>
 #include <string>
 
-#include <glm/glm.hpp>
-
 #include <glowwindow/glowwindow.h>
-#include <glowwindow/KeyEvent.h>
+#include <glow/ref_ptr.h>
+#include <glowwindow/KeyEvent.h>  // forward?
 
 struct GLFWwindow;
 
@@ -24,7 +23,7 @@ class Timer;
 */
 class GLOWWINDOW_API Window
 {
-friend class AbstractNativeWindow;
+friend class WindowEventDispatcher;
 
 public:
     Window();
@@ -40,7 +39,7 @@ public:
         when the window gets destroyed. Hence, the static window loop (run) 
         will receive a quit event and destroy all other remaining windows.
     */
-    void setQuitOnDestroy(const bool enable);
+    void setQuitOnDestroy(bool enable);
     bool quitsOnDestroy() const;
 
     /** Takes ownership of the given eventhandler and deletes that either on
@@ -77,35 +76,23 @@ public:
         the attached WindowEventHandler instance.
     */
     static int run();
-    static void quit(const int code = 0);
+    static void quit(int code = 0);
 
 protected:
+    void idle();
+    void paint();
+    void destroy();
+
     void promoteContext();
 
-    /** onRepaint makes the context valid, calls the paint event of the attached 
-        event handler, swaps the buffer, and releases the context. 
-    */
-    void onRepaint();
-    void onResize();
-
-    void onIdle();
-    void onClose();
-
-    bool onKeyPress(const int key);
-    bool onKeyRelease(const int key);
+    void processEvent(WindowEvent* event);
+    void defaultAction(WindowEvent* event);
 
 protected:
-    void processKeyEvent(
-        KeyEvent & event
-    ,   WindowEventHandler * eventHandler);
-
-protected:
-    WindowEventHandler * m_eventHandler;
+    ref_ptr<WindowEventHandler> m_eventHandler;
     Context * m_context;
 
     bool m_quitOnDestroy;
-
-    std::set<int> m_keysPressed;
 
     enum Mode
     {
@@ -126,8 +113,11 @@ protected:
 private:
     GLFWwindow * m_window;
     static std::set<Window*> s_windows;
+    static bool running;
+    static int exitCode;
 
-    glm::ivec2 m_size;
+    int m_width;
+    int m_height;
 };
 
 } // namespace glow

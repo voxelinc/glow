@@ -62,7 +62,7 @@ public:
     {
     }
 
-    virtual void initializeEvent(Window & window)
+    virtual void initialize(Window & window)
     {
         DebugMessageOutput::enable();
 
@@ -148,8 +148,8 @@ public:
     
     virtual void resizeEvent(
         Window & window
-    ,   const unsigned int width
-    ,   const unsigned int height)
+    ,   unsigned int width
+    ,   unsigned int height)
     {
         glViewport(0, 0, width, height);
     }

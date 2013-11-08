@@ -11,6 +11,9 @@
 #include <glowwindow/Context.h>
 #include <glowwindow/WindowEventHandler.h>
 #include <glowwindow/Window.h>
+#include <glowwindow/KeyEvent.h>
+
+#include "WindowEventDispatcher.h"
 
 namespace glow
 {
@@ -18,8 +21,7 @@ namespace glow
 std::set<Window*> Window::s_windows;
 
 Window::Window()
-:   m_eventHandler(nullptr)
-,   m_context(nullptr)
+:   m_context(nullptr)
 ,   m_quitOnDestroy(true)
 ,   m_mode(WindowMode)
 ,   m_title("")
@@ -27,21 +29,26 @@ Window::Window()
 ,   m_swapts(0.0)
 ,   m_swaps(0)
 ,   m_window(nullptr)
+,   m_width(0)
+,   m_height(0)
 {
     s_windows.insert(this);
 }
 
 Window::~Window()
 {
-    s_windows.erase(s_windows.find(this));
+    s_windows.erase(this);
+    WindowEventDispatcher::deregisterWindow(this);
 
-    assert(nullptr == m_eventHandler);
+    if (s_windows.empty())
+        quit(0);
+
     delete m_timer;    
 }
 
 WindowEventHandler * Window::eventHandler() const
 {
-    return m_eventHandler;
+    return const_cast<WindowEventHandler*>(m_eventHandler.get());
 }
 
 Context * Window::context() const
@@ -51,12 +58,12 @@ Context * Window::context() const
 
 int Window::width() const
 {
-    return m_size.x;
+    return m_width;
 }
 
 int Window::height() const
 {
-    return m_size.y;
+    return m_height;
 }
 
 void Window::setQuitOnDestroy(const bool enable)
@@ -73,26 +80,13 @@ bool Window::create(
     assert(nullptr == m_context);
 
     m_context = new Context();
-    const bool result = m_context->create(format);
-    if (!result)
+    if (!m_context->create(format))
     {
         delete m_context;
         m_context = nullptr;
 
-        if (m_eventHandler)
-        {
-            delete m_eventHandler;
-            m_eventHandler = nullptr;
-        }
         return false;
     }
-    else
-        promoteContext();
-
-    m_title = title;
-
-    m_size.x = width;
-    m_size.y = height;
 
     m_window = m_context->window();
     if (!m_window)
@@ -100,39 +94,36 @@ bool Window::create(
         fatal() << "Creating native window with OpenGL context failed.";
         return false;
     }
-    glfwSetWindowSize(m_window, m_size.x, m_size.y);
+
+    m_title = title;
+
+    m_width = width;
+    m_height = height;
+
+    glfwSetWindowSize(m_window, m_width, m_height);
     glfwSetWindowTitle(m_window, m_title.c_str());
 
-    glfwGetWindowSize(m_window, &width, &height);
-
-    assert(m_size.x == width);
-    assert(m_size.y == height);
+    WindowEventDispatcher::registerWindow(this);
 
     promoteContext();
+
     return true;
+}
+
+void Window::promoteContext()
+{
+    if (m_eventHandler)
+    {
+         m_context->makeCurrent();
+         m_eventHandler->initialize(*this);
+		 m_eventHandler->resizeEvent(*this, m_width, m_height);
+         m_context->doneCurrent();
+    }
 }
 
 bool Window::quitsOnDestroy() const
 {
     return m_quitOnDestroy;
-}
-
-void Window::close()
-{
-    onClose();
-}
-
-void Window::promoteContext()
-{
-    if(!m_eventHandler)
-        return;
-
-    m_context->makeCurrent();
-
-    m_eventHandler->initializeEvent(*this);
-    m_eventHandler->resizeEvent(*this, width(), height());
-
-    m_context->doneCurrent();
 }
 
 void Window::show()
@@ -188,9 +179,11 @@ void Window::toggleMode()
     case TransitionMode:
         return;
     case FullScreenMode:
-        return windowed();
+        windowed();
+        return;
     case WindowMode:
-        return fullScreen();
+        fullScreen();
+        return;
     }
 }
 
@@ -198,9 +191,6 @@ void Window::assign(WindowEventHandler * eventHandler)
 {
     if (eventHandler == m_eventHandler)
         return;
-
-    if (m_eventHandler)
-        delete m_eventHandler;
 
     m_eventHandler = eventHandler;
 
@@ -213,30 +203,43 @@ void Window::assign(WindowEventHandler * eventHandler)
     promoteContext();
 }
 
+bool Window::running = false;
+int Window::exitCode = 0;
+
 int Window::run()
 {
-    while (!s_windows.empty())
+    running = true;
+
+    while (running)
     {
         for (Window * window : s_windows)
-            window->onIdle();
+            window->idle();
 
         glfwPollEvents();
     };
     glfwTerminate();
-    return 0;
+    return exitCode;
 }
 
 void Window::quit(const int code)
 {
-
+    exitCode = code;
+    running = false;
 }
 
 void Window::repaint()
 {
-    onRepaint();
+    WindowEvent e(WindowEvent::Paint);
+    processEvent(&e);
 }
 
-void Window::onRepaint()
+void Window::close()
+{
+    WindowEvent e(WindowEvent::Close);
+    processEvent(&e);
+}
+
+void Window::paint()
 {
     if (!m_timer)
     {
@@ -244,12 +247,8 @@ void Window::onRepaint()
         m_swapts = 0.0;
     }
 
-    m_context->makeCurrent();
-
-    if (m_eventHandler)
-        m_eventHandler->paintEvent(*this);
-
     m_context->swap();
+
     m_timer->update();
 
     ++m_swaps;
@@ -267,20 +266,9 @@ void Window::onRepaint()
         m_swapts = m_timer->elapsed();
         m_swaps = 0;
     }
-    m_context->doneCurrent();
 }
 
-void Window::onResize()
-{
-    if (!m_context || !m_eventHandler)
-        return;
-
-    m_context->makeCurrent();
-    m_eventHandler->resizeEvent(*this, width(), height());
-    m_context->doneCurrent();
-}
-
-void Window::onIdle()
+void Window::idle()
 {
     if (!m_context || !m_eventHandler)
         return;
@@ -293,80 +281,69 @@ void Window::onIdle()
     m_context->doneCurrent();
 }
 
-void Window::onClose()
+void Window::destroy()
 {
-    if (m_context)
-    {
-        if (m_eventHandler)
-        {
-            m_context->makeCurrent();
-            
-            m_eventHandler->deinitializeEvent(*this);
-            delete m_eventHandler;
-            m_eventHandler = nullptr;
+    m_context->release();
 
-            m_context->doneCurrent();
-        }
-        m_context->release();
+    delete m_context;
+    m_context = nullptr;
+    m_window = nullptr;
 
-        delete m_context;
-        m_context = nullptr;
-        m_window = nullptr;
-    }
+    if (m_eventHandler)
+        m_eventHandler->finalize(*this);
 
     if (m_quitOnDestroy)
         quit(0);
 }
 
-bool Window::onKeyPress(const int key)
+void Window::processEvent(WindowEvent* event)
 {
-    KeyEvent kpe(KeyEvent::KeyPressEvent, key);
+    if (!m_context)
+        return;
 
-    m_keysPressed.insert(kpe.key());
+    m_context->makeCurrent();
+    m_eventHandler->handleEvent(*this, event);
 
-    if (kpe.isDiscarded())
-    {
-        m_context->makeCurrent();
-        m_eventHandler->keyPressEvent(*this, kpe);
+    if (!event->isAccepted())
+        defaultAction(event);
+
+    if (m_context)
         m_context->doneCurrent();
-    }
-    return kpe.isAccepted();
 }
 
-bool Window::onKeyRelease(const int key)
+void Window::defaultAction(WindowEvent* event)
 {
-    KeyEvent kre(KeyEvent::KeyReleaseEvent, key);
-
-    switch (kre.key())
+    switch (event->type())
     {
-    case GLFW_KEY_ESCAPE:
-        kre.accept();
-        close();
-        break;
+        case WindowEvent::Close:
+            destroy();
+            event->accept();
+            break;
+        case WindowEvent::Paint:
+            paint();
+            event->accept();
+            break;
+        case WindowEvent::KeyPress:
+            KeyEvent* keyEvent = dynamic_cast<KeyEvent*>(event);
+            if (keyEvent->key() == GLFW_KEY_ESCAPE)
+            {
+                keyEvent->accept();
+                close();
+            }
+            //    case GLFW_KEY_ENTER:
+            //        if (kre.modifiers() & GLFW_MOD_ALT != 0)
+            //        {
+            //            kre.accept();
+            //            toggleMode();
+            //        }
+            //        break;
 
-    case GLFW_KEY_ENTER:
-        if (m_keysPressed.find(GLFW_KEY_LEFT_ALT) != m_keysPressed.cend())
-        {
-            kre.accept();
-            toggleMode();
-        }
-        break;
+            //    default:
+            //        break;
+            //    }
 
-    default: 
-        break;
+            break;
     }
-
-    const auto f = m_keysPressed.find(kre.key());
-    if (f != m_keysPressed.cend())
-        m_keysPressed.erase(f);
-
-    if (kre.isDiscarded())
-    {   
-        m_context->makeCurrent();
-        m_eventHandler->keyReleaseEvent(*this, kre);
-        m_context->doneCurrent();
-    }
-    return kre.isAccepted();
 }
 
 } // namespace glow
