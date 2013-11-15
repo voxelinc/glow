@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cassert>
+
+#include <glow/Array.h>
+
 namespace glow
 {
 
@@ -32,6 +36,7 @@ Array<T>::Array(
 ,   const unsigned size)
 :   std::vector<T>(data, data + size)
 {
+    assert(data != nullptr);
 }
 
 template<typename T>
@@ -40,6 +45,7 @@ Array<T>::Array(
 ,   const unsigned size)
 :   std::vector<T>(reinterpret_cast<T*>(data), reinterpret_cast<T*>(data) + size / sizeof(T))
 {
+    assert(data != nullptr);
 }
 
 template<typename T>

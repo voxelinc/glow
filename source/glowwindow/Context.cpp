@@ -1,4 +1,3 @@
-
 #include <cassert>
 
 #include <GL/glew.h>
@@ -31,7 +30,10 @@ GLFWwindow * Context::window()
     return m_window;
 }
 
-bool Context::create(const ContextFormat & format)
+bool Context::create(
+    const ContextFormat & format
+,   const int width
+,   const int height)
 {
     if (isValid())
     {
@@ -48,8 +50,16 @@ bool Context::create(const ContextFormat & format)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, format.minorVersion());
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, format.profile() == ContextFormat::CoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
+    
+    glfwWindowHint(GLFW_DEPTH_BITS, format.depthBufferSize());
+    glfwWindowHint(GLFW_STENCIL_BITS, format.stencilBufferSize());
+    glfwWindowHint(GLFW_RED_BITS, format.redBufferSize());
+    glfwWindowHint(GLFW_GREEN_BITS, format.greenBufferSize());
+    glfwWindowHint(GLFW_BLUE_BITS, format.blueBufferSize());
+    glfwWindowHint(GLFW_ALPHA_BITS, format.alphaBufferSize());
+    glfwWindowHint(GLFW_SAMPLES, format.samples());
 
-    m_window = glfwCreateWindow(320, 240, "glow", nullptr, nullptr);
+    m_window = glfwCreateWindow(width, height, "glow", nullptr, nullptr);
 
     if (!m_window)
     {

@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cassert>
+
 #include <glow/logging.h>
 #include <glow/Uniform.h>
 #include <glow/Error.h>
 #include <glow/Shader.h>
+#include <glow/Program.h>
 
 namespace glow
 {
@@ -41,6 +44,8 @@ Uniform<T> * Program::getUniform(const std::string & name)
 template <class ...Shaders>
 void Program::attach(Shader * shader, Shaders... shaders)
 {
+    assert(shader != nullptr);
+
     glAttachShader(m_id, shader->id());
     CheckGLError();
 

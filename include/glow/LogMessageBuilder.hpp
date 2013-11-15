@@ -1,11 +1,17 @@
 #pragma once
 
+#include <cassert>
+
+#include <glow/LogMessageBuilder.h>
+
 namespace glow
 {
 
 template <typename T>
 LogMessageBuilder& LogMessageBuilder::operator<<(Uniform<T>* uniform)
 {
+    assert(uniform != nullptr);
+
     *this << static_cast<AbstractUniform*>(uniform) << " " << uniform->value();
 }
 

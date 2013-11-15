@@ -1,5 +1,6 @@
 
 #include <sstream>
+#include <cassert>
 
 #include <glow/logging.h>
 
@@ -31,6 +32,8 @@ namespace glow
 SourceTemplate::SourceTemplate(ShaderSource * source)
 : m_internal(source)
 {
+    assert(source != nullptr);
+
 	m_internal->registerListener(this);
 	modifySource();
 }
@@ -40,7 +43,7 @@ SourceTemplate::~SourceTemplate()
 	m_internal->deregisterListener(this);
 }
 
-const std::string & SourceTemplate::source()
+const std::string & SourceTemplate::source() const
 {
 	return m_modifiedSource;
 }
