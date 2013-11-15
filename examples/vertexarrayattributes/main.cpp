@@ -11,6 +11,7 @@
 #include <glow/Shader.h>
 #include <glow/VertexArrayObject.h>
 #include <glow/VertexAttributeBinding.h>
+#include <glowutils/File.h>
 #include <glowwindow/Context.h>
 #include <glowwindow/Window.h>
 #include <glowwindow/WindowEventHandler.h>
@@ -74,8 +75,8 @@ public:
 
         m_shaderProgram = new glow::Program();
         m_shaderProgram->attach(
-            glow::Shader::fromFile(GL_VERTEX_SHADER, "data/vertexarrayattributes/test.vert"),
-            glow::Shader::fromFile(GL_FRAGMENT_SHADER, "data/vertexarrayattributes/test.frag")
+            glow::createShaderFromFile(GL_VERTEX_SHADER, "data/vertexarrayattributes/test.vert"),
+            glow::createShaderFromFile(GL_FRAGMENT_SHADER, "data/vertexarrayattributes/test.frag")
         );
         m_shaderProgram->bindFragDataLocation(0, "fragColor");
 
@@ -172,8 +173,6 @@ protected:
 
 int main(int argc, char* argv[])
 {
-    glewExperimental = GL_TRUE;
-
     ContextFormat format;
 
     Window window;
@@ -181,7 +180,7 @@ int main(int argc, char* argv[])
     {
         AutoTimer t("Initialization");
 
-        window.assign(new EventHandler());
+        window.setEventHandler(new EventHandler());
 
         window.create(format, "Vertex Array Attributes Example");
         window.context()->setSwapInterval(Context::VerticalSyncronization);

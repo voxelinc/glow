@@ -51,8 +51,6 @@ public:
 */
 int main(int argc, char* argv[])
 {
-    glewExperimental = GL_TRUE;
-
     ContextFormat format;
     format.setVersion(4, 3);
     format.setProfile(ContextFormat::CoreProfile);
@@ -61,7 +59,7 @@ int main(int argc, char* argv[])
     {
     AutoTimer t("Initialization");
 
-    window.assign(new EventHandler());
+    window.setEventHandler(new EventHandler());
     if (!window.create(format, "Single Context Example"))
         return 0;
 

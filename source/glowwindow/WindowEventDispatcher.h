@@ -1,6 +1,7 @@
 #pragma once
 
-#include <set>
+#include <unordered_map>
+#include <chrono>
 
 struct GLFWwindow;
 
@@ -12,16 +13,44 @@ class Window;
 class WindowEventDispatcher
 {
 public:
+    struct Timer
+    {
+        typedef std::chrono::duration<double, std::milli> Duration;
+
+        Timer();
+        Timer(int interval, bool singleShot);
+
+        std::chrono::milliseconds interval;
+        Duration elapsed;
+        bool singleShot;
+
+        bool ready() const;
+        void reset();
+    };
+public:
     static void registerWindow(Window* window);
     static void deregisterWindow(Window* window);
+
+    static void addTimer(Window* window, int id, int interval, bool singleShot);
+    static void removeTimer(Window* window, int id);
+    static void removeTimers(Window* window);
+    static void initializeTime();
+    static void checkForTimerEvents();
 private:
     WindowEventDispatcher();
 
+    typedef std::unordered_map<int, Timer> TimerMap;
+    typedef std::unordered_map<Window*, TimerMap> WindowTimerMap;
+
+    static WindowTimerMap s_timers;
+    static std::chrono::high_resolution_clock::time_point s_time;
+    static std::chrono::high_resolution_clock s_clock;
 protected:
     static Window* fromGLFW(GLFWwindow* glfwWindow);
-    static void mousePosition(GLFWwindow* glfwWindow, int& x, int &y);
+    static glm::ivec2 mousePosition(GLFWwindow* glfwWindow);
 
-    static void queueEvent(GLFWwindow* glfwWindow, WindowEvent* event);
+    static void dispatchEvent(GLFWwindow* glfwWindow, WindowEvent* event);
+    static void dispatchEvent(Window* window, WindowEvent* event);
 
     static void handleRefresh(GLFWwindow* glfwWindow);
     static void handleKey(GLFWwindow* glfwWindow, int key, int scanCode, int action, int modifiers);
