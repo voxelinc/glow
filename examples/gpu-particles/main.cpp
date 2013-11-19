@@ -14,6 +14,7 @@
 #include <glow/Timer.h>
 #include <glow/Texture.h>
 #include <glow/Array.h>
+#include <glow/NamedStrings.h>
 
 #include <glowutils/Camera.h>
 #include <glowutils/File.h>
@@ -90,6 +91,10 @@ public:
         m_forces->setParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         m_forces->setParameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         m_forces->setParameter(GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+        // Initialize shader includes
+
+        glow::NamedStrings::createNamedString("/glow/data/gpu-particles/particleMovement.inc", new glow::File("data/gpu-particles/particleMovement.inc"));
         
         // initialize camera
 
@@ -135,12 +140,8 @@ public:
         draw();
     }
 
-    void step()
+    void step(const float delta)
     {
-        const long double elapsed = m_timer.elapsed();
-        m_timer.update();
-
-        const float delta = static_cast<float>((m_timer.elapsed() - elapsed) * 1.0e-9L);
         const float delta_stepped = delta / static_cast<float>(m_steps);
 
         for (int i = 0; i < m_steps; ++i)
@@ -149,8 +150,13 @@ public:
 
     void draw()
     {
-        step(); // requires context to be current
-        m_techniques[m_technique]->draw();
+        const long double elapsed = m_timer.elapsed();
+        m_timer.update();
+
+        const float delta = static_cast<float>((m_timer.elapsed() - elapsed) * 1.0e-9L);
+
+        step(delta); // requires context to be current
+        m_techniques[m_technique]->draw(delta);
     }
 
     void reset(const bool particles = true)
