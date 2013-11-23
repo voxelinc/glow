@@ -12,7 +12,7 @@ namespace glow
 
 Shader* createShaderFromFile(const GLenum type, const std::string& filename)
 {
-    return new Shader(type, new File(filename));
+    return new Shader(type, FileRegistry::instance().obtain(filename));
 }
 
 File::File(const std::string & filePath)
