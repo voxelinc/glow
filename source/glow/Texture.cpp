@@ -102,11 +102,44 @@ GLint Texture::getLevelParameter(GLint level, GLenum pname)
 	return value;
 }
 
+
+void Texture::compressedImage2D(GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data)
+{
+	bind();
+
+	glCompressedTexImage2D(m_target, level, internalFormat, width, height, border, imageSize, data);
+	CheckGLError();
+}
+
+void Texture::compressedImage2D(GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data, GLenum targetOverride)
+{
+	bind();
+
+	glCompressedTexImage2D(targetOverride, level, internalFormat, width, height, border, imageSize, data);
+	CheckGLError();
+}
+
 void Texture::image2D(GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data)
 {
 	bind();
 
-    glTexImage2D(m_target, level, internalFormat, width, height, border, format, type, data);
+	glTexImage2D(m_target, level, internalFormat, width, height, border, format, type, data);
+	CheckGLError();
+}
+
+void Texture::image1D(GLint level, GLint internalFormat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid* data)
+{
+	bind();
+
+	glTexImage1D(m_target, level, internalFormat, width, border, format, type, data);
+	CheckGLError();
+}
+
+void Texture::image2D(GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data, GLenum targetOverride)
+{
+	bind();
+
+	glTexImage2D(targetOverride, level, internalFormat, width, height, border, format, type, data);
 	CheckGLError();
 }
 

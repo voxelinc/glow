@@ -15,7 +15,7 @@ namespace glow
 
 int AutoTimer::m_numActiveInstances(0);
 
-AutoTimer::AutoTimer(const char * info)
+AutoTimer::AutoTimer(std::string info)
 :   m_info(info)
 ,   m_index(++m_numActiveInstances)
 ,   m_timer(new Timer(false))
