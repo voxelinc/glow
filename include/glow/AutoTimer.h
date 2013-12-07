@@ -1,5 +1,6 @@
 
 #pragma once
+#include <string>
 
 #include <glow/glow.h>
 
