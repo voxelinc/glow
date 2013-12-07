@@ -30,13 +30,13 @@ class Timer;
 class GLOW_API AutoTimer
 {
 public:
-    explicit AutoTimer(const char * info);
+    explicit AutoTimer(std::string info);
     virtual ~AutoTimer();
 
 protected:
     static int m_numActiveInstances;
 
-    const char * m_info;
+    const std::string m_info;
     const int m_index;
 
     Timer * m_timer;
