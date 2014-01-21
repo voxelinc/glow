@@ -8,20 +8,21 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/random.hpp>
 
 #include <glow/Error.h>
 #include <glow/logging.h>
-#include <glow/Timer.h>
 #include <glow/Texture.h>
 #include <glow/Array.h>
-#include <glow/NamedStrings.h>
+#include <glow/global.h>
+#include <glow/debugmessageoutput.h>
 
 #include <glowutils/Camera.h>
 #include <glowutils/File.h>
 #include <glowutils/FileRegistry.h>
-#include <glowutils/MathMacros.h>
 #include <glowutils/AbstractCoordinateProvider.h>
 #include <glowutils/WorldInHandNavigation.h>
+#include <glowutils/Timer.h>
 
 #include <glowwindow/Context.h>
 #include <glowwindow/ContextFormat.h>
@@ -56,7 +57,7 @@ public:
 
         m_positions.resize(m_numParticles);
         for (int i = 0; i < m_numParticles; ++i)
-            m_positions[i] = vec4(randf(-1.f, +1.f), randf(-1.f, +1.f), randf(-1.f, +1.f), 1.f);
+            m_positions[i] = vec4(glm::sphericalRand<float>(1.0), 1.f);
 
         m_velocities.resize(m_numParticles);
         for (int i = 0; i < m_numParticles; ++i)
@@ -79,9 +80,9 @@ public:
         delete m_camera;
     }
 
-    virtual void initialize(Window & window) override
+    virtual void initialize(Window & ) override
     {
-        glow::DebugMessageOutput::enable();
+        glow::debugmessageoutput::enable();
 
         m_forces = new glow::Texture(GL_TEXTURE_3D);
 
@@ -94,7 +95,7 @@ public:
 
         // Initialize shader includes
 
-        glow::NamedStrings::createNamedString("/glow/data/gpu-particles/particleMovement.inc", new glowutils::File("data/gpu-particles/particleMovement.inc"));
+        glow::createNamedString("/glow/data/gpu-particles/particleMovement.inc", new glowutils::File("data/gpu-particles/particleMovement.inc"));
         
         // initialize camera
 
@@ -128,9 +129,11 @@ public:
         reset();
     }
     
-    virtual void resizeEvent(ResizeEvent & event) override
+    virtual void framebufferResizeEvent(ResizeEvent & event) override
     {
         glViewport(0, 0, event.width(), event.height());
+        CheckGLError();
+
         m_camera->setViewport(event.size());
 
         for (auto technique : m_techniques)
@@ -182,7 +185,7 @@ public:
         for (int x = 0; x < fdim.x; ++x)
         {
             const int i = z *  fdim.x * fdim.y + y * fdim.x + x;
-            const vec3 f(randf(-1.0, +1.f), randf(-1.0, +1.f), randf(-1.0, +1.f));
+            const vec3 f(glm::sphericalRand<float>(1.0));
 
             forces[i] = f * (1.f - length(vec3(x, y, z)) / sqrt(3.f));
         }
@@ -201,7 +204,7 @@ public:
 
     // EVENT HANDLING
 
-    virtual void keyPressEvent(KeyEvent & event)
+    virtual void keyPressEvent(KeyEvent & event) override
     {
         switch (event.key())
         {
@@ -272,6 +275,10 @@ public:
         case glowutils::WorldInHandNavigation::RotateInteraction:
             m_nav->rotateProcess(event.pos());
             event.accept();
+            break;
+        case glowutils::WorldInHandNavigation::PanInteraction:
+        case glowutils::WorldInHandNavigation::NoInteraction:
+            break;
         }
     }
     virtual void mouseReleaseEvent(MouseEvent & event) override
@@ -285,7 +292,7 @@ public:
         }
     }
 
-    void scrollEvent(ScrollEvent & event) override
+    virtual void scrollEvent(ScrollEvent & event) override
     {
         if (glowutils::WorldInHandNavigation::NoInteraction != m_nav->mode())
             return;
@@ -294,20 +301,20 @@ public:
         event.accept();
     }
 
-    virtual const float depthAt(const ivec2 & windowCoordinates)
+    virtual float depthAt(const ivec2 & /*windowCoordinates*/) override
     {
         return 2.0;
     }
 
-    virtual const vec3 objAt(const ivec2 & windowCoordinates)
+    virtual vec3 objAt(const ivec2 & /*windowCoordinates*/) override
     {
         return vec3(0.f);
     }
-    virtual const vec3 objAt(const ivec2 & windowCoordinates, const float depth)
+    virtual vec3 objAt(const ivec2 & /*windowCoordinates*/, const float /*depth*/) override
     {
         return vec3(0.f);
     }
-    virtual const glm::vec3 objAt(const ivec2 & windowCoordinates, const float depth, const mat4 & viewProjectionInverted)
+    virtual glm::vec3 objAt(const ivec2 & /*windowCoordinates*/, const float /*depth*/, const mat4 & /*viewProjectionInverted*/) override
     {
         return vec3(0.f);
     }
@@ -326,10 +333,10 @@ protected:
     ParticleTechnique m_technique;
     std::map<ParticleTechnique, AbstractParticleTechnique *> m_techniques;
 
-    glow::Timer m_timer;
+    glowutils::Timer m_timer;
 
-    glowutils::Camera * m_camera;
     int m_numParticles;
+    glowutils::Camera * m_camera;
 
     glow::Array<vec4> m_positions;
     glow::Array<vec4> m_velocities;
@@ -352,7 +359,7 @@ protected:
 
 /** This example shows ... .
 */
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
     ContextFormat format;
     format.setVersion(3, 2); // minimum required version is 3.2 due to particle drawing using geometry shader.

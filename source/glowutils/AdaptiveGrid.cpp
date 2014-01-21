@@ -11,10 +11,12 @@
 #include <glow/Buffer.h>
 #include <glow/VertexArrayObject.h>
 #include <glow/VertexAttributeBinding.h>
+#include <glow/String.h>
 
 #include <glowutils/Plane3.h>
 #include <glowutils/Camera.h>
 #include <glowutils/AdaptiveGrid.h>
+#include <glowutils/StringTemplate.h>
 
 
 using namespace glm;
@@ -104,11 +106,20 @@ AdaptiveGrid::AdaptiveGrid(
 ,   m_normal(normal)
 ,   m_size(0)
 {
-    m_transform = transform(m_location, m_normal); 
-
-    m_program->attach(
-        Shader::fromString(GL_VERTEX_SHADER,   s_vsSource)
-    ,   Shader::fromString(GL_FRAGMENT_SHADER, s_fsSource));
+    m_transform = transform(m_location, m_normal);
+  
+    StringTemplate* vertexShaderString = new StringTemplate(new glow::String(s_vsSource));
+    StringTemplate* fragmentShaderString = new StringTemplate(new glow::String(s_fsSource));
+  
+  
+#ifdef MAC_OS
+  vertexShaderString->replace("#version 140", "#version 150");
+  fragmentShaderString->replace("#version 140", "#version 150");
+#endif
+  
+  
+    m_program->attach(new Shader(GL_VERTEX_SHADER, vertexShaderString),
+                      new Shader(GL_FRAGMENT_SHADER, fragmentShaderString));
 
     setColor(vec3(.8f));
 
@@ -159,7 +170,7 @@ void AdaptiveGrid::setupGridLineBuffer(unsigned short segments)
     m_buffer = new Buffer(GL_ARRAY_BUFFER);
     m_buffer->setData(points, GL_STATIC_DRAW);
 
-    m_size = segments * 64 - 4; 
+    m_size = static_cast<unsigned short>(segments * 64 - 4);
 }
 
 void AdaptiveGrid::setCamera(const Camera * camera)
@@ -214,13 +225,13 @@ void AdaptiveGrid::update(
     const vec3 u(vec3(T * vec4(viewPlaneDistance, 0.f, 0.f, 1.f)) - m_location);
     const vec3 v(vec3(T * vec4(0.f, 0.f, viewPlaneDistance, 1.f)) - m_location);
 
-    const size_t j = u[0] != 0.0 ? 0 : u[1] != 0.0 ? 1 : 2;
-    const size_t k = v[0] != 0.0 && j != 0 ? 0 : v[1] != 0.0  && j != 1 ? 1 : 2;
+    const size_t j = (u[0] < 0.0f || u[0] > 0.0f) ? 0 : (u[1] < 0.0 || u[1] > 0.0) ? 1 : 2;
+    const size_t k = (v[0] < 0.0 || v[0] > 0.0) && j != 0 ? 0 : (v[1] < 0.0 || v[1] > 0.0) && j != 1 ? 1 : 2;
 
     const vec3 a(i - m_location);
 
-    const float t = v[k] ? a[k] / v[k] : 0.f;
-    const float s = u[j] ? (a[j] - t * v[j]) / u[j] : 0.f;
+    const float t = v[k] > 0.0 || v[k] < 0.0 ? a[k] / v[k] : 0.f;
+    const float s = u[j] > 0.0 || u[j] < 0.0 ? (a[j] - t * v[j]) / u[j] : 0.f;
 
     const vec3 irounded = round(s) * u + round(t) * v;
 
@@ -233,9 +244,11 @@ void AdaptiveGrid::update(
 void AdaptiveGrid::draw()
 {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    CheckGLError();
     glEnable(GL_BLEND);
-
+    CheckGLError();
     glEnable(GL_DEPTH_TEST);
+    CheckGLError();
 
     m_program->use();
 
@@ -246,6 +259,7 @@ void AdaptiveGrid::draw()
     m_program->release();
 
     glDisable(GL_BLEND);
+    CheckGLError();
 }
 
 } // namespace glowutils

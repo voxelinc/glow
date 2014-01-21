@@ -8,6 +8,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/constants.hpp>
 
 #include <glow/Uniform.h>
 #include <glow/Array.h>
@@ -16,13 +17,17 @@
 #include <glow/Buffer.h>
 #include <glow/VertexArrayObject.h>
 #include <glow/VertexAttributeBinding.h>
-#include <glowwindow/ContextFormat.h>
 #include <glow/Error.h>
 #include <glow/logging.h>
+#include <glow/debugmessageoutput.h>
+
 #include <glowutils/File.h>
 #include <glowutils/FileRegistry.h>
 #include <glowutils/ScreenAlignedQuad.h>
+#include <glowutils/global.h>
+
 #include <glowwindow/Context.h>
+#include <glowwindow/ContextFormat.h>
 #include <glowwindow/Window.h>
 #include <glowwindow/WindowEventHandler.h>
 
@@ -45,37 +50,40 @@ public:
     void createAndSetupShaders();
 	void createAndSetupGeometry();
 
-    virtual void initialize(Window & window) override
+    virtual void initialize(Window & ) override
     {
-        glow::DebugMessageOutput::enable();
+        glow::debugmessageoutput::enable();
 
         glClearColor(0.2f, 0.3f, 0.4f, 1.f);
+        CheckGLError();
 
 	    createAndSetupTexture();
 	    createAndSetupShaders();
 	    createAndSetupGeometry();
     }
     
-    virtual void resizeEvent(ResizeEvent & event) override
+    virtual void framebufferResizeEvent(ResizeEvent & event) override
     {
         int width = event.width();
         int height = event.height();
         int side = std::min<int>(width, height);
+
         glViewport((width - side) / 2, (height - side) / 2, side, side);
+        CheckGLError();
     }
 
     virtual void paintEvent(PaintEvent &) override
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
 
-        ++m_frame %= 628; // int(pi * 100)
+        ++m_frame %= static_cast<int>(200 * glm::pi<double>());
 
 	    m_computeProgram->setUniform("roll", static_cast<float>(m_frame) * 0.01f);
 
 	    m_texture->bind();
 
-	    m_computeProgram->use();
-	    glDispatchCompute(512/16, 512/16, 1); // 512^2 threads in blocks of 16^2
+        m_computeProgram->dispatchCompute(512/16, 512/16, 1); // 512^2 threads in blocks of 16^2
 	    m_computeProgram->release();
 
         m_quad->draw();
@@ -104,7 +112,7 @@ protected:
 
 /** This example shows ... .
 */
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
     ContextFormat format;
     format.setVersion(4, 3);

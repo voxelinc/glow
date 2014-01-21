@@ -19,7 +19,9 @@ class GLOW_API String : public StringSource
 public:
     String(const std::string& string);
 
-    virtual const std::string& string() const override;
+    virtual std::string string() const override;
+
+    void setString(const std::string& string);
 protected:
     std::string m_string;
 };

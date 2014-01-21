@@ -1,7 +1,6 @@
 
 #include <GL/glew.h>
 
-#include <glowwindow/ContextFormat.h>
 #include <glow/Error.h>
 #include <glow/ref_ptr.h>
 #include <glow/Buffer.h>
@@ -10,8 +9,14 @@
 #include <glow/Shader.h>
 #include <glow/VertexArrayObject.h>
 #include <glow/VertexAttributeBinding.h>
+#include <glow/debugmessageoutput.h>
+
 #include <glowutils/File.h>
+#include <glowutils/global.h>
+#include <glowutils/StringTemplate.h>
+
 #include <glowwindow/Context.h>
+#include <glowwindow/ContextFormat.h>
 #include <glowwindow/Window.h>
 #include <glowwindow/WindowEventHandler.h>
 
@@ -62,21 +67,31 @@ public:
     {
     }
 
-    virtual void initialize(Window & window) override
+    virtual void initialize(Window & ) override
     {
-        glow::DebugMessageOutput::enable();
+        glow::debugmessageoutput::enable();
 
         glClearColor(0.2f, 0.3f, 0.4f, 1.f);
+        CheckGLError();
+
         glPointSize(10.0);
+        CheckGLError();
 
         m_vao = new glow::VertexArrayObject();
         m_buffer = new glow::Buffer(GL_ARRAY_BUFFER);
 
+        glowutils::StringTemplate* vertexShaderSource = new glowutils::StringTemplate(new glowutils::File("data/vertexarrayattributes/test.vert"));
+        glowutils::StringTemplate* fragmentShaderSource = new glowutils::StringTemplate(new glowutils::File("data/vertexarrayattributes/test.frag"));
+        
+#ifdef MAC_OS
+        vertexShaderSource->replace("#version 140", "#version 150");
+        fragmentShaderSource->replace("#version 140", "#version 150");
+#endif
+        
         m_shaderProgram = new glow::Program();
-        m_shaderProgram->attach(
-            glowutils::createShaderFromFile(GL_VERTEX_SHADER, "data/vertexarrayattributes/test.vert")
-        ,   glowutils::createShaderFromFile(GL_FRAGMENT_SHADER, "data/vertexarrayattributes/test.frag")
-        );
+        m_shaderProgram->attach(new glow::Shader(GL_VERTEX_SHADER, vertexShaderSource),
+                                new glow::Shader(GL_FRAGMENT_SHADER, fragmentShaderSource));
+        
         m_shaderProgram->bindFragDataLocation(0, "fragColor");
 
         m_buffer->setData(glow::Array<Element>()
@@ -146,14 +161,16 @@ public:
         m_vao->enable(11);
     }
     
-    virtual void resizeEvent(ResizeEvent & event) override
+    virtual void framebufferResizeEvent(ResizeEvent & event) override
     {
         glViewport(0, 0, event.width(), event.height());
+        CheckGLError();
     }
 
     virtual void paintEvent(PaintEvent &) override
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
 
         m_shaderProgram->use();
         m_vao->drawArrays(GL_POINTS, 0, 2);
@@ -170,14 +187,14 @@ protected:
     glow::ref_ptr<glow::Program> m_shaderProgram;
 };
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
     ContextFormat format;
     format.setVersion(3, 0);
 
     Window window;
 
-        window.setEventHandler(new EventHandler());
+    window.setEventHandler(new EventHandler());
 
     if (window.create(format, "Vertex Array Attributes Example"))
     {
@@ -185,8 +202,8 @@ int main(int argc, char* argv[])
 
         window.show();
 
-    return MainLoop::run();
-}
+        return MainLoop::run();
+    }
     else
     {
         return 1;

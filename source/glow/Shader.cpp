@@ -11,31 +11,56 @@
 
 #include <glow/Shader.h>
 
+#include <glow/ref_ptr.h>
+
 #include "IncludeProcessor.h"
+
+namespace
+{
+
+std::vector<const char*> collectCStrings(std::vector<std::string> & strings)
+{
+    std::vector<const char*> cStrings;
+
+    for (const std::string & str : strings)
+    {
+        cStrings.push_back(str.c_str());
+    }
+
+    return cStrings;
+}
+
+}
 
 namespace glow
 {
 
-Shader::Shader(
-    const GLenum type
-,   StringSource * source)
-:   Object(create(type))
-,   m_type(type)
-,   m_source(nullptr)
-,   m_compiled(false)
-{
-	if (source)
-		setSource(source);
-}
+bool Shader::forceFallbackIncludeProcessor = false;
+
 
 Shader::Shader(const GLenum type)
-:   Shader(type, nullptr)
+: Object(create(type))
+, m_type(type)
+, m_compiled(false)
+, m_compilationFailed(false)
 {
 }
 
-Shader * Shader::fromString(
-    const GLenum type
-    , const std::string & sourceString)
+
+Shader::Shader(const GLenum type, StringSource * source)
+: Shader(type)
+{
+    setSource(source);
+}
+
+Shader::Shader(const GLenum type, StringSource * source, const std::vector<std::string> & includePaths)
+: Shader(type)
+{
+    setIncludePaths(includePaths);
+    setSource(source);
+}
+
+Shader * Shader::fromString(const GLenum type, const std::string & sourceString)
 {
     return new Shader(type, new String(sourceString));
 }
@@ -104,31 +129,39 @@ void Shader::notifyChanged()
 
 void Shader::updateSource()
 {
+    std::vector<std::string> sources;
+
     if (m_source)
     {
-        std::string source = IncludeProcessor::resolveIncludes(m_source->string());
+        if (forceFallbackIncludeProcessor || !GLEW_ARB_shading_language_include || Version::current() < Version(4, 0)) // fallback
+        {
+            ref_ptr<StringSource> resolvedSource = IncludeProcessor::resolveIncludes(m_source, m_includePaths);
 
-        const char * sourcePointer = source.c_str();
-        const int sourceSize = source.size();
+            sources = resolvedSource->strings();
+        }
+        else
+        {
+            sources = m_source->strings();
+        }
+    }
 
-        glShaderSource(m_id, 1, &sourcePointer, &sourceSize);
-    }
-    else
-    {
-        glShaderSource(m_id, 0, nullptr, nullptr);
-    }
+    std::vector<const char*> cStrings = collectCStrings(sources);
+
+    glShaderSource(m_id, static_cast<GLint>(cStrings.size()), cStrings.data(), nullptr);
+    CheckGLError();
 
     invalidate();
 }
 
 bool Shader::compile()
 {
-    if (glCompileShaderIncludeARB && Version::current() >= Version(3, 2))
+    if (m_compilationFailed)
+        return false;
+
+    if (!forceFallbackIncludeProcessor && GLEW_ARB_shading_language_include && glCompileShaderIncludeARB && Version::current() >= Version(4, 0))
     {
-        // This call seems to be identical to glCompileShader(m_id) on this nvidia-331 driver on Ubuntu 13.04.
-        // Since we don't want to depend on such driver dependent behavior, we call glCompileShaderIncludeARB
-        // despite we don't use include paths by now
-        glCompileShaderIncludeARB(m_id, 0, nullptr, nullptr);
+        std::vector<const char*> cStrings = collectCStrings(m_includePaths);
+        glCompileShaderIncludeARB(m_id, static_cast<GLint>(cStrings.size()), cStrings.data(), nullptr);
         CheckGLError();
     }
     else
@@ -138,6 +171,9 @@ bool Shader::compile()
     }
 
     m_compiled = checkCompileStatus();
+
+    m_compilationFailed = !m_compiled;
+
     changed();
 
     return m_compiled;
@@ -151,15 +187,40 @@ bool Shader::isCompiled() const
 void Shader::invalidate()
 {
     m_compiled = false;
+    m_compilationFailed = false;
     changed();
+}
+
+void Shader::setIncludePaths(const std::vector<std::string> & includePaths)
+{
+    m_includePaths = includePaths;
+
+    invalidate();
+}
+
+GLint Shader::get(GLenum pname) const
+{
+    GLint value = 0;
+    glGetShaderiv(m_id, pname, &value);
+    CheckGLError();
+
+    return value;
+}
+
+std::string Shader::getSource() const
+{
+    GLint sourceLength = get(GL_SHADER_SOURCE_LENGTH);
+    std::vector<char> source(sourceLength);
+
+    glGetShaderSource(m_id, sourceLength, nullptr, source.data());
+    CheckGLError();
+
+    return std::string(source.data(), sourceLength);
 }
 
 bool Shader::checkCompileStatus() const
 {
-    GLint status = 0;
-
-    glGetShaderiv(m_id, GL_COMPILE_STATUS, &status);
-    CheckGLError();
+    GLint status = get(GL_COMPILE_STATUS);
 
     if (GL_FALSE == status)
     {
@@ -176,11 +237,7 @@ bool Shader::checkCompileStatus() const
 
 std::string Shader::infoLog() const
 {
-	GLsizei length;
-
-	glGetShaderiv(m_id, GL_INFO_LOG_LENGTH, &length);
-	CheckGLError();
-
+    GLsizei length = get(GL_INFO_LOG_LENGTH);
 	std::vector<char> log(length);
 
 	glGetShaderInfoLog(m_id, length, &length, log.data());

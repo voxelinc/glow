@@ -10,7 +10,9 @@ set(libs
 )
 
 # Definitions
-add_definitions("-DGLOW_EXPORTS")
+if (NOT OPTION_BUILD_STATIC)
+    add_definitions("-DGLOW_EXPORTS")
+endif()
 
 if (OPTION_ERRORS_AS_EXCEPTION)
 	add_definitions("-DGLOW_GL_ERROR_RAISE_EXCEPTION")
@@ -30,26 +32,29 @@ set(api_includes
     ${header_path}/AbstractArray.h
     ${header_path}/Array.h
     ${header_path}/Array.hpp
-    ${header_path}/AutoTimer.h
     ${header_path}/Buffer.h
+    ${header_path}/Capability.h
     ${header_path}/Changeable.h
     ${header_path}/ChangeListener.h
+    ${header_path}/CompositeStringSource.h
     ${header_path}/ConsoleLogger.h
+    ${header_path}/constants.h
     ${header_path}/DebugInfo.h
     ${header_path}/DebugMessage.h
-    ${header_path}/DebugMessageOutput.h
+    ${header_path}/debugmessageoutput.h
     ${header_path}/Error.h
     ${header_path}/FrameBufferAttachment.h
     ${header_path}/FrameBufferObject.h
     ${header_path}/formatString.h
     ${header_path}/formatString.hpp
     ${header_path}/global.h
+    ${header_path}/global.hpp
     ${header_path}/logging.h
     ${header_path}/logging.hpp
     ${header_path}/LogMessage.h
     ${header_path}/LogMessageBuilder.h
     ${header_path}/LogMessageBuilder.hpp
-    ${header_path}/NamedStrings.h
+    ${header_path}/memory.h
     ${header_path}/Object.h
     ${header_path}/ObjectRegistry.h
     ${header_path}/ObjectVisitor.h
@@ -61,14 +66,14 @@ set(api_includes
     ${header_path}/Referenced.h
     ${header_path}/RenderBufferAttachment.h
     ${header_path}/RenderBufferObject.h
-    ${header_path}/Screen.h
+    ${header_path}/Sampler.h
     ${header_path}/Shader.h
+    ${header_path}/State.h
     ${header_path}/String.h
     ${header_path}/StringSource.h
     ${header_path}/Texture.h
     ${header_path}/TextureAttachment.h
     ${header_path}/TextureHandle.h
-    ${header_path}/Timer.h
     ${header_path}/TransformFeedback.h
     ${header_path}/Uniform.h
     ${header_path}/Uniform.hpp
@@ -79,19 +84,22 @@ set(api_includes
 )
 
 set(sources
-    ${source_path}/glow.cpp
-    
     ${source_path}/AbstractUniform.cpp
-    ${source_path}/AutoTimer.cpp
     ${source_path}/Buffer.cpp
+    ${source_path}/Capability.cpp
     ${source_path}/Changeable.cpp
     ${source_path}/ChangeListener.cpp
-    ${source_path}/ChronoTimer.cpp
-    ${source_path}/ChronoTimer.h
+    ${source_path}/CompositeStringSource.cpp
     ${source_path}/ConsoleLogger.cpp
+    ${source_path}/constants.cpp
+    ${source_path}/gl_constants.h
+    ${source_path}/contextid.h
+    ${source_path}/contextid.cpp
     ${source_path}/DebugInfo.cpp
     ${source_path}/DebugMessage.cpp
-    ${source_path}/DebugMessageOutput.cpp
+    ${source_path}/DebugMessageCallback.h
+    ${source_path}/DebugMessageCallback.cpp
+    ${source_path}/debugmessageoutput.cpp
     ${source_path}/Error.cpp
     ${source_path}/FrameBufferAttachment.cpp
     ${source_path}/FrameBufferObject.cpp
@@ -102,7 +110,9 @@ set(sources
     ${source_path}/logging.cpp
     ${source_path}/LogMessage.cpp
     ${source_path}/LogMessageBuilder.cpp
+    ${source_path}/memory.cpp
     ${source_path}/NamedStrings.cpp
+    ${source_path}/NamedStrings.h
     ${source_path}/Object.cpp
     ${source_path}/ObjectRegistry.cpp
     ${source_path}/ObjectVisitor.cpp
@@ -111,13 +121,13 @@ set(sources
     ${source_path}/Referenced.cpp
     ${source_path}/RenderBufferAttachment.cpp
     ${source_path}/RenderBufferObject.cpp
-    ${source_path}/Screen.cpp
+    ${source_path}/Sampler.cpp
     ${source_path}/Shader.cpp
+    ${source_path}/State.cpp
     ${source_path}/String.cpp
     ${source_path}/StringSource.cpp
     ${source_path}/Texture.cpp
     ${source_path}/TextureAttachment.cpp
-    ${source_path}/Timer.cpp
     ${source_path}/TransformFeedback.cpp
     ${source_path}/UniformSetter.cpp
     ${source_path}/Version.cpp

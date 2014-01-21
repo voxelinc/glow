@@ -15,21 +15,23 @@
 #include <glow/Shader.h>
 #include <glow/Buffer.h>
 #include <glow/logging.h>
-#include <glow/AutoTimer.h>
 #include <glow/VertexArrayObject.h>
 #include <glow/FrameBufferObject.h>
 #include <glow/RenderBufferObject.h>
 #include <glow/Texture.h>
-#include <glow/Timer.h>
+#include <glow/debugmessageoutput.h>
 
 #include <glowutils/ScreenAlignedQuad.h>
-#include <glowutils/MathMacros.h>
 #include <glowutils/Icosahedron.h>
 #include <glowutils/UnitCube.h>
 #include <glowutils/AdaptiveGrid.h>
 #include <glowutils/Camera.h>
 #include <glowutils/FileRegistry.h>
 #include <glowutils/File.h>
+#include <glowutils/AutoTimer.h>
+#include <glowutils/Timer.h>
+#include <glowutils/global.h>
+#include <glowutils/StringTemplate.h>
 
 #include <glowwindow/ContextFormat.h>
 #include <glowwindow/Context.h>
@@ -56,11 +58,12 @@ public:
 	void createAndSetupShaders();
 	void createAndSetupGeometry();
 
-    virtual void initialize(Window & window) override
+    virtual void initialize(Window & ) override
 	{
-        glow::DebugMessageOutput::enable();
+        glow::debugmessageoutput::enable();
 
 		glClearColor(1.0f, 1.0f, 1.0f, 0.f);
+        CheckGLError();
 
 		m_fbo = new glow::FrameBufferObject();
 
@@ -87,16 +90,28 @@ public:
 		// ToDo: this could be done automatically by default..
 		m_fbo->setDrawBuffers({ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 });
 
+                
+        glowutils::StringTemplate* sphereVertexShader = new glowutils::StringTemplate(new glowutils::File("data/post-processing/sphere.vert"));
+        glowutils::StringTemplate* sphereFragmentShader = new glowutils::StringTemplate(new glowutils::File("data/post-processing/sphere.frag"));
+        glowutils::StringTemplate* phongVertexShader = new glowutils::StringTemplate(new glowutils::File("data/post-processing/phong.vert"));
+        glowutils::StringTemplate* phongFragmentShader = new glowutils::StringTemplate(new glowutils::File("data/post-processing/phong.frag"));
 
+#ifdef MAC_OS
+                sphereVertexShader->replace("#version 140", "#version 150");
+                sphereFragmentShader->replace("#version 140", "#version 150");
+                phongVertexShader->replace("#version 140", "#version 150");
+                phongFragmentShader->replace("#version 140", "#version 150");
+#endif
+
+                
 		m_sphere = new glow::Program();
-		m_sphere->attach(
-            glowutils::createShaderFromFile(GL_VERTEX_SHADER, "data/post-processing/sphere.vert")
-        ,   glowutils::createShaderFromFile(GL_FRAGMENT_SHADER, "data/post-processing/sphere.frag"));
+        m_sphere->attach(new glow::Shader(GL_VERTEX_SHADER, sphereVertexShader), new glow::Shader(GL_FRAGMENT_SHADER, sphereFragmentShader));
+                
 
 		m_phong = new glow::Program();
-		m_phong->attach(
-            glowutils::createShaderFromFile(GL_VERTEX_SHADER, "data/post-processing/phong.vert")
-        ,	glowutils::createShaderFromFile(GL_FRAGMENT_SHADER, "data/post-processing/phong.frag"));
+        m_phong->attach(new glow::Shader(GL_VERTEX_SHADER, phongVertexShader), new glow::Shader(GL_FRAGMENT_SHADER, phongFragmentShader));
+                
+                
 
         m_icosahedron = new glowutils::Icosahedron(2);
         m_agrid = new glowutils::AdaptiveGrid(16U);
@@ -112,12 +127,14 @@ public:
         m_agrid->setCamera(&m_camera);
 	}
 
-    virtual void resizeEvent(ResizeEvent & event) override
+    virtual void framebufferResizeEvent(ResizeEvent & event) override
 	{
         int width = event.width();
         int height = event.height();
 
         glViewport(0, 0, width, height);
+        CheckGLError();
+
         m_camera.setViewport(width, height);
 
 		m_normal->image2D(0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
@@ -139,6 +156,7 @@ public:
 
 		m_fbo->bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
 
 		m_sphere->use();
 		m_icosahedron->draw();
@@ -147,20 +165,24 @@ public:
 		m_fbo->unbind();
 
 		glDisable(GL_DEPTH_TEST);
+        CheckGLError();
 		glDepthMask(GL_FALSE);
+        CheckGLError();
 
 		m_phong->setUniform("normal", 0);
 		m_phong->setUniform("geom", 1);
-        m_normal->bind(GL_TEXTURE0);
-        m_geom->bind(GL_TEXTURE1);
+        m_normal->bindActive(GL_TEXTURE0);
+        m_geom->bindActive(GL_TEXTURE1);
 
 		m_quad->draw();
 
-        m_geom->unbind(GL_TEXTURE1);
-        m_normal->unbind(GL_TEXTURE0);
+        m_geom->unbindActive(GL_TEXTURE1);
+        m_normal->unbindActive(GL_TEXTURE0);
 
 		glEnable(GL_DEPTH_TEST);
+        CheckGLError();
 		glDepthMask(GL_TRUE);
+        CheckGLError();
 
 		// use the fbo's depth buffer as default depth buffer ;)
 		// Note: this requires the depth formats to match exactly.
@@ -203,13 +225,13 @@ protected:
     glow::ref_ptr<glow::RenderBufferObject> m_depth;
 
     glowutils::Camera m_camera;
-	glow::Timer m_time;
+    glowutils::Timer m_time;
 };
 
 
 /** This example shows ... .
 */
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
 	ContextFormat format;
     format.setVersion(3, 0);

@@ -6,6 +6,7 @@
 #include <glowutils/Camera.h>
 #include <glowutils/File.h>
 #include <glowutils/ScreenAlignedQuad.h>
+#include <glowutils/global.h>
 
 #include "FragmentShaderParticles.h"
 
@@ -98,8 +99,8 @@ void FragmentShaderParticles::initialize()
 void FragmentShaderParticles::reset()
 {
     // Choose appropriate width and height for the current number of particles
-    int size = m_positions.size();
-    m_width  = (int)sqrt((float)size);
+    int size = static_cast<int>(m_positions.size());
+    m_width  = static_cast<int>(sqrt(static_cast<float>(size)));
     m_height = m_width;
     int remain = size - (m_height * m_width);
     m_height += remain / m_width + (remain % m_width == 0 ? 0 : 1);
@@ -115,9 +116,9 @@ void FragmentShaderParticles::step(const float elapsed)
     // Use positions and velocities textures for both input and output at the same time
 
     m_fboUpdate->bind();
-    m_texPositions->bind(GL_TEXTURE0);
-    m_texVelocities->bind(GL_TEXTURE1);
-    m_forces.bind(GL_TEXTURE2);
+    m_texPositions->bindActive(GL_TEXTURE0);
+    m_texVelocities->bindActive(GL_TEXTURE1);
+    m_forces.bindActive(GL_TEXTURE2);
     m_quadUpdate->program()->setUniform("elapsed", elapsed);
 
     glViewport(0, 0, m_width, m_height);
@@ -145,9 +146,9 @@ void FragmentShaderParticles::draw(const float elapsed)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
     m_drawProgram->setUniform("viewProjection", m_camera.viewProjection());
-    m_texPositions->bind(GL_TEXTURE0);
+    m_texPositions->bindActive(GL_TEXTURE0);
     m_drawProgram->setUniform("vertices", 0);
-    m_texVelocities->bind(GL_TEXTURE1);
+    m_texVelocities->bindActive(GL_TEXTURE1);
     m_drawProgram->setUniform("velocities", 1);
     m_drawProgram->setUniform("texWidth", m_width);
     m_drawProgram->use();

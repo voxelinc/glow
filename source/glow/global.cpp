@@ -1,44 +1,53 @@
 
 #include <GL/glew.h>
 
-#ifndef GL_VERSION_3_0
-#define GL_NUM_EXTENSIONS                       0x821D
-#define GL_CONTEXT_FLAGS                        0x821E
-#define GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT  0x0001
-#endif
-
-#ifndef GL_VERSION_3_2
-#define GL_CONTEXT_CORE_PROFILE_BIT             0x00000001
-#define GL_CONTEXT_COMPATIBILITY_PROFILE_BIT    0x00000002
-#define GL_CONTEXT_PROFILE_MASK                 0x9126
-#endif
-
-// http://developer.download.nvidia.com/opengl/specs/GL_NVX_gpu_memory_info.txt
-#define GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX            0x9047
-#define GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX      0x9048
-#define GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX    0x9049
-#define GPU_MEMORY_INFO_EVICTION_COUNT_NVX              0x904A
-#define GPU_MEMORY_INFO_EVICTED_MEMORY_NVX              0x904B
-
 #include <glow/global.h>
 
 #include <glow/Error.h>
+
+#include "NamedStrings.h"
 
 
 namespace glow
 {
 
+bool init()
+{
+    glewExperimental = GL_TRUE;
 
-// query
+    if (glewInit() != GLEW_OK)
+    {
+        // possible errors:
+        // GLEW_ERROR_NO_GL_VERSION
+        // GLEW_ERROR_GL_VERSION_10_ONLY
+        // GLEW_ERROR_GLX_VERSION_11_ONLY
+        // TODO: handle?
 
-std::string query::getString(GLenum pname)
+        return false;
+    }
+
+    // NOTE: should be safe to ignore:
+    // http://www.opengl.org/wiki/OpenGL_Loading_Library
+    Error::clear(); // ignore GL_INVALID_ENUM
+
+    return true;
+}
+
+std::string getString(GLenum pname)
 {
 	const GLubyte* result = glGetString(pname);
 	CheckGLError();
 	return reinterpret_cast<const char*>(result);
 }
 
-GLint query::getInteger(GLenum pname)
+std::string getString(GLenum pname, GLuint index)
+{
+    const GLubyte* result = glGetStringi(pname, index);
+    CheckGLError();
+    return reinterpret_cast<const char*>(result);
+}
+
+GLint getInteger(GLenum pname)
 {
 	GLint value;
 
@@ -48,7 +57,7 @@ GLint query::getInteger(GLenum pname)
 	return value;
 }
 
-GLfloat query::getFloat(GLenum pname)
+GLfloat getFloat(GLenum pname)
 {
 	GLfloat value;
 
@@ -58,7 +67,7 @@ GLfloat query::getFloat(GLenum pname)
 	return value;
 }
 
-GLdouble query::getDouble(GLenum pname)
+GLdouble getDouble(GLenum pname)
 {
 	GLdouble value;
 
@@ -68,7 +77,7 @@ GLdouble query::getDouble(GLenum pname)
 	return value;
 }
 
-GLboolean query::getBoolean(GLenum pname)
+GLboolean getBoolean(GLenum pname)
 {
 	GLboolean value;
 
@@ -78,7 +87,7 @@ GLboolean query::getBoolean(GLenum pname)
 	return value;
 }
 
-GLint query::getInteger(GLenum pname, unsigned index)
+GLint getInteger(GLenum pname, GLuint index)
 {
 	GLint value;
 
@@ -88,92 +97,117 @@ GLint query::getInteger(GLenum pname, unsigned index)
 	return value;
 }
 
-std::vector<GLint> query::getIntegers(GLenum pname, unsigned size)
+GLfloat getFloat(GLenum pname, GLuint index)
 {
-	GLint* values = new GLint[size];
+    GLfloat value;
 
-	glGetIntegerv(pname, values);
-	CheckGLError();
+    glGetFloati_v(pname, index, &value);
+    CheckGLError();
 
-	std::vector<GLint> result(values, values+size);
-	delete[] values;
-
-	return result;
+    return value;
 }
 
-std::string query::vendor()
+GLdouble getDouble(GLenum pname, GLuint index)
 {
-	return getString(GL_VENDOR);
+    GLdouble value;
+
+    glGetDoublei_v(pname, index, &value);
+    CheckGLError();
+
+    return value;
 }
 
-std::string query::renderer()
+GLboolean getBoolean(GLenum pname, GLuint index)
 {
-	return getString(GL_RENDERER);
+    GLboolean value;
+
+    glGetBooleani_v(pname, index, &value);
+    CheckGLError();
+
+    return value;
 }
 
-std::string query::versionString()
+void createNamedString(const std::string& name, const std::string& string, GLenum type)
 {
-	return getString(GL_VERSION);
+    NamedStrings::createNamedString(name, string, type);
 }
 
-Version query::version()
+void createNamedString(const std::string& name, StringSource* source, GLenum type)
 {
-	return Version(majorVersion(), minorVersion());
+    NamedStrings::createNamedString(name, source, type);
 }
 
-GLint query::majorVersion()
+void deleteNamedString(const std::string& name)
 {
-	return getInteger(GL_MAJOR_VERSION);
+    NamedStrings::deleteNamedString(name);
 }
 
-GLint query::minorVersion()
+bool isNamedString(const std::string& name, bool cached)
 {
-	return getInteger(GL_MINOR_VERSION);
+    return NamedStrings::isNamedString(name, cached);
 }
 
-bool query::isCoreProfile()
+std::string getNamedString(const std::string& name, bool cached)
 {
-	if (version()<Version(3,2))
-	{
-		return false;
-	}
-
-	return (getInteger(GL_CONTEXT_PROFILE_MASK) & GL_CONTEXT_CORE_PROFILE_BIT) != 0;
+    return NamedStrings::namedString(name, cached);
 }
 
-// memory
-
-GLint memory::total()
+StringSource* getNamedStringSource(const std::string& name)
 {
-	return memoryInfo(GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX);
+    return NamedStrings::namedStringSource(name);
 }
 
-GLint memory::dedicated()
+GLenum getNamedStringType(const std::string& name, bool cached)
 {
-	return memoryInfo(GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX);
+    return NamedStrings::namedStringType(name, cached);
 }
 
-GLint memory::available()
+void enable(GLenum capability)
 {
-	return memoryInfo(GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX);
+    glEnable(capability);
+    CheckGLError();
 }
 
-GLint memory::evicted()
+void disable(GLenum capability)
 {
-	return memoryInfo(GPU_MEMORY_INFO_EVICTED_MEMORY_NVX);
+    glDisable(capability);
+    CheckGLError();
 }
 
-GLint memory::evictionCount()
+bool isEnabled(GLenum capability)
 {
-	return memoryInfo(GPU_MEMORY_INFO_EVICTION_COUNT_NVX);
+    GLboolean value = glIsEnabled(capability);
+    CheckGLError();
+    return value == GL_TRUE;
 }
 
-GLint memory::memoryInfo(GLenum pname)
+void setEnabled(GLenum capability, bool enabled)
 {
-    if (!GLEW_NVX_gpu_memory_info)
-		return -1;
+    enabled ? enable(capability) : disable(capability);
+}
 
-	return query::getInteger(pname);
+void enable(GLenum capability, int index)
+{
+    glEnablei(capability, index);
+    CheckGLError();
+}
+
+void disable(GLenum capability, int index)
+{
+    glDisablei(capability, index);
+    CheckGLError();
+}
+
+bool isEnabled(GLenum capability, int index)
+{
+    GLboolean value = glIsEnabledi(capability, index);
+    CheckGLError();
+    return value == GL_TRUE;
+}
+
+void setEnabled(GLenum capability, int index, bool enabled)
+{
+    enabled ? enable(capability, index) : disable(capability, index);
 }
 
 } // namespace glow

@@ -15,15 +15,16 @@
 #include <glow/Shader.h>
 #include <glow/Buffer.h>
 #include <glow/logging.h>
-#include <glow/AutoTimer.h>
-#include <glow/Timer.h>
+#include <glow/debugmessageoutput.h>
 
-#include <glowutils/MathMacros.h>
 #include <glowutils/Icosahedron.h>
 #include <glowutils/AdaptiveGrid.h>
 #include <glowutils/Camera.h>
 #include <glowutils/FileRegistry.h>
 #include <glowutils/File.h>
+#include <glowutils/AutoTimer.h>
+#include <glowutils/Timer.h>
+#include <glowutils/global.h>
 
 #include <glowwindow/ContextFormat.h>
 #include <glowwindow/Context.h>
@@ -46,17 +47,12 @@ public:
     {
     }
 
-    void createAndSetupTexture();
-    void createAndSetupShaders();
-    void createAndSetupGeometry();
-
-    virtual void initialize(Window & window) override
+    virtual void initialize(Window & ) override
     {
-        glEnable(GL_TEXTURE_2D);
-
-        glow::DebugMessageOutput::enable();
+        glow::debugmessageoutput::enable();
 
         glClearColor(1.0f, 1.0f, 1.0f, 0.f);
+        CheckGLError();
 
         m_sphere = new glow::Program();
         m_sphere->attach(
@@ -79,18 +75,21 @@ public:
         m_agrid->setCamera(&m_camera);
     }
 
-    virtual void resizeEvent(ResizeEvent & event) override
+    virtual void framebufferResizeEvent(ResizeEvent & event) override
     {
         int width = event.width();
         int height = event.height();
 
         glViewport(0, 0, width, height);
+        CheckGLError();
+
         m_camera.setViewport(width, height);
     }
 
     virtual void paintEvent(PaintEvent &) override
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
 
         m_agrid->update();
 
@@ -133,7 +132,7 @@ protected:
     glow::ref_ptr<glowutils::AdaptiveGrid> m_agrid;
 
     glowutils::Camera m_camera;
-    glow::Timer m_time;
+    glowutils::Timer m_time;
 
     vec3 m_rand;
 };
@@ -141,7 +140,7 @@ protected:
 
 /** This example shows ... .
 */
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
     ContextFormat format;
     format.setVersion(4, 0);

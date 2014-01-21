@@ -7,6 +7,7 @@
 #include <glow/Array.h>
 #include <glow/logging.h>
 #include <glow/Texture.h>
+#include <glow/debugmessageoutput.h>
 
 #include <glowutils/ScreenAlignedQuad.h>
 #include <glowwindow/ContextFormat.h>
@@ -31,28 +32,31 @@ public:
     void createAndSetupTexture();
 	void createAndSetupGeometry();
 
-    virtual void initialize(Window & window) override
+    virtual void initialize(Window & ) override
     {
-        glow::DebugMessageOutput::enable();
+        glow::debugmessageoutput::enable();
 
         glClearColor(0.2f, 0.3f, 0.4f, 1.f);
+        CheckGLError();
 
         createAndSetupTexture();
 	    createAndSetupGeometry();
     }
     
-    virtual void resizeEvent(ResizeEvent & event) override
+    virtual void framebufferResizeEvent(ResizeEvent & event) override
     {
         int width = event.width();
         int height = event.height();
-
     	int side = std::min<int>(width, height);
+
         glViewport((width - side) / 2, (height - side) / 2, side, side);
+        CheckGLError();
     }
 
     virtual void paintEvent(PaintEvent &) override
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
 
         m_quad->draw();
     }
@@ -64,13 +68,13 @@ public:
 
 protected:
     glow::ref_ptr<glow::Texture> m_texture;
-    glowutils::ScreenAlignedQuad * m_quad;
+    glow::ref_ptr<glowutils::ScreenAlignedQuad> m_quad;
 };
 
 
 /** This example shows ... .
 */
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
     ContextFormat format;
     format.setVersion(3, 0);
@@ -105,7 +109,7 @@ void EventHandler::createAndSetupTexture()
     std::poisson_distribution<> r(0.2);
 
     for (int i = 0; i < w * h * 4; ++i)
-        data[i] = 255 - static_cast<unsigned char>(r(generator) * 255);
+        data[i] = static_cast<unsigned char>(255 - static_cast<unsigned char>(r(generator) * 255));
 
 	m_texture = new glow::Texture(GL_TEXTURE_2D);
 

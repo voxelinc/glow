@@ -77,6 +77,12 @@ void FrameBufferObject::unbind()
 	CheckGLError();
 }
 
+void FrameBufferObject::unbind(GLenum target)
+{
+    glBindFramebuffer(target, 0);
+    CheckGLError();
+}
+
 void FrameBufferObject::setParameter(GLenum pname, GLint param)
 {
 	bind();
@@ -192,7 +198,7 @@ void FrameBufferObject::setDrawBuffers(GLsizei n, const GLenum* modes)
 
 void FrameBufferObject::setDrawBuffers(const std::vector<GLenum>& modes)
 {
-	setDrawBuffers(modes.size(), modes.data());
+    setDrawBuffers(static_cast<int>(modes.size()), modes.data());
 }
 
 void FrameBufferObject::clear(GLbitfield mask)
@@ -366,7 +372,7 @@ void FrameBufferObject::printStatus(bool onlyErrors)
 
 		critical() << statusString(status) << " (" << ss.str() << ")";
 	}
-	}
+}
 
 FrameBufferAttachment* FrameBufferObject::attachment(GLenum attachment)
 {
