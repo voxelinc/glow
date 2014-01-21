@@ -1,16 +1,19 @@
 
 #include <cassert>
+#include <algorithm>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/constants.hpp>
 
 #include <glow/logging.h>
 
-#include <glowutils/MathMacros.h>
 #include <glowutils/AbstractCoordinateProvider.h>
 #include <glowutils/Camera.h>
-#include <glowutils/NavigationMath.h>
+#include <glowutils/navigationmath.h>
 
 #include <glowutils/WorldInHandNavigation.h>
+
+#include <limits>
 
 using namespace glm;
 
@@ -25,14 +28,14 @@ namespace
     static const float DEFAULT_DIST_MIN   = 0.1f;
     static const float DEFAULT_DIST_MAX   = 4.0f;
 
-    static const float ROTATION_HOR_DOF   = 0.8f * static_cast<float>(PI);
-    static const float ROTATION_VER_DOF   = 0.8f * static_cast<float>(PI);
+    static const float ROTATION_HOR_DOF   = 0.8f * glm::pi<float>();
+    static const float ROTATION_VER_DOF   = 0.8f * glm::pi<float>();
 
     static const float ROTATION_KEY_SCALE = 1.0f;
 
     //static const float NAV_CONSTRAINT_PAN_CIRCLE_R = 2.83;
-    static const float CONSTRAINT_ROT_MAX_V_UP = 0.02f * static_cast<float>(PI);
-    static const float CONSTRAINT_ROT_MAX_V_LO = 0.98f * static_cast<float>(PI);
+    static const float CONSTRAINT_ROT_MAX_V_UP = 0.02f * glm::pi<float>();
+    static const float CONSTRAINT_ROT_MAX_V_LO = 0.98f * glm::pi<float>();
 }
 
 namespace glowutils
@@ -110,7 +113,7 @@ const vec3 WorldInHandNavigation::mouseRayPlaneIntersection(
     const vec3 ln = m_coordsProvider->objAt(mouse, 0.0);
     const vec3 lf = m_coordsProvider->objAt(mouse, 1.0);
 
-    return NavigationMath::rayPlaneIntersection(intersects, ln, lf, p0);
+    return navigationmath::rayPlaneIntersection(intersects, ln, lf, p0);
 }
 
 const vec3 WorldInHandNavigation::mouseRayPlaneIntersection(
@@ -128,7 +131,7 @@ const vec3 WorldInHandNavigation::mouseRayPlaneIntersection(
     const vec3 ln = m_coordsProvider->objAt(mouse, 0.0, viewProjectionInverted);
     const vec3 lf = m_coordsProvider->objAt(mouse, 1.0, viewProjectionInverted);
 
-    return NavigationMath::rayPlaneIntersection(intersects, ln, lf, p0);
+    return navigationmath::rayPlaneIntersection(intersects, ln, lf, p0);
 }
 
 const vec3 WorldInHandNavigation::mouseRayPlaneIntersection(
@@ -211,7 +214,10 @@ void WorldInHandNavigation::pan(vec3 t)
         return;
 
     //enforceTranslationConstraints(t);
-
+	if (glm::isinf(t.x) || glm::isinf(t.y) || glm::isinf(t.z)) {
+		return;
+	}
+	
     m_camera->setEye(t + m_eye);
     m_camera->setCenter(t + m_center);
 
@@ -251,9 +257,9 @@ void WorldInHandNavigation::rotateProcess(const ivec2 & mouse)
 
     const vec2 delta(m_m0 - mouse);
     // setup the degree of freedom for horizontal rotation within a single action
-    const float wDeltaX = deg(delta.x / m_camera->viewport().x);
+    const float wDeltaX = glm::degrees(delta.x / static_cast<float>(m_camera->viewport().x));
     // setup the degree of freedom for vertical rotation within a single action
-    const float wDeltaY = deg(delta.y / m_camera->viewport().y);
+    const float wDeltaY = glm::degrees(delta.y / static_cast<float>(m_camera->viewport().y));
 
     rotate(wDeltaX, wDeltaY);
 }
@@ -320,7 +326,7 @@ void WorldInHandNavigation::scaleAtMouse(
     // the new viewray-groundplane intersection as new center.
     const vec3 center = lf + scale * (lf - i);
 
-    m_camera->setCenter(NavigationMath::rayPlaneIntersection(intersects, eye, center));
+    m_camera->setCenter(navigationmath::rayPlaneIntersection(intersects, eye, center));
     m_camera->update();
 }
 
@@ -336,7 +342,7 @@ void WorldInHandNavigation::resetScaleAtMouse(const ivec2 & mouse)
     if (!intersects && !AbstractCoordinateProvider::validDepth(m_coordsProvider->depthAt(mouse)))
         return;
 
-    float scale = (DEFAULT_DISTANCE / (ln - i).length());
+    float scale = (DEFAULT_DISTANCE / static_cast<float>((ln - i).length()));
 
     //enforceScaleConstraints(scale, i);
 
@@ -352,7 +358,7 @@ void WorldInHandNavigation::scaleAtCenter(float scale)
     const vec3 lf = m_camera->center();
 
     bool intersects;
-    vec3 i = NavigationMath::rayPlaneIntersection(intersects, ln, lf);
+    vec3 i = navigationmath::rayPlaneIntersection(intersects, ln, lf);
     if (!intersects)
         return;
 
@@ -371,16 +377,14 @@ void WorldInHandNavigation::enforceTranslationConstraints(vec3 & p) const
     translate(m, p);
 
     const vec2 center(vec3(m * vec4(m_center, 0.f)));
-    if (NavigationMath::insideSquare(center))
+    if (navigationmath::insideSquare(center))
         return;
 
-    const vec2 i = NavigationMath::raySquareIntersection(center);
+    const vec2 i = navigationmath::raySquareIntersection(center);
     p = vec3(i.x, 0.f, i.y) - m_center;
 }
 
-void WorldInHandNavigation::enforceRotationConstraints(
-    float & hAngle
-,   float & vAngle) const
+void WorldInHandNavigation::enforceRotationConstraints(float & /*hAngle*/, float & vAngle) const
 {
     // hAngle is not constrained, vAngle is.
 
@@ -388,12 +392,12 @@ void WorldInHandNavigation::enforceRotationConstraints(
     // to up/down it can be rotated and clamp if required.
 
     static const vec3 up(0.f, 1.f, 0.f);
-    const float va = deg(acos(dot(normalize(m_eye - m_center), up)));
+    const float va = glm::degrees(glm::acos(dot(normalize(m_eye - m_center), up)));
 
     if (vAngle <= 0.f)
-        vAngle = ma(vAngle, deg(CONSTRAINT_ROT_MAX_V_UP) - va);
+        vAngle = std::max(vAngle, glm::degrees(CONSTRAINT_ROT_MAX_V_UP) - va);
     else
-        vAngle = mi(vAngle, deg(CONSTRAINT_ROT_MAX_V_LO) - va);
+        vAngle = std::min(vAngle, glm::degrees(CONSTRAINT_ROT_MAX_V_LO) - va);
 }
  
 void WorldInHandNavigation::enforceScaleConstraints(
@@ -403,9 +407,9 @@ void WorldInHandNavigation::enforceScaleConstraints(
     // first constraint: i must be within the ground quad...
     vec2 i2(i);
 
-    if (!NavigationMath::insideSquare(i2))
+    if (!navigationmath::insideSquare(i2))
     {
-        i2 = NavigationMath::raySquareIntersection(i2);
+        i2 = navigationmath::raySquareIntersection(i2);
         i = vec3(i2.x, 0.f, i2.y);
     }
 

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <set>
+#include <vector>
 
 #include <glow/glow.h>
 
@@ -37,17 +38,16 @@ class GLOW_API Shader : public Object, protected ChangeListener, public Changeab
     friend class ShaderCompiler;
 
 public:
-    static Shader * fromString(
-        const GLenum type
-    ,   const std::string & sourceString);
+    static Shader * fromString(const GLenum type, const std::string & sourceString);
 
 public:
 	Shader(const GLenum type);
     Shader(const GLenum type, StringSource * source);
+    Shader(const GLenum type, StringSource * source, const std::vector<std::string> & includePaths);
 
 	virtual ~Shader();
 
-	virtual void accept(ObjectVisitor& visitor);
+    virtual void accept(ObjectVisitor& visitor) override;
 
 	GLenum type() const;
 
@@ -55,36 +55,39 @@ public:
 	void setSource(const std::string & source);
     const StringSource* source() const;
     void updateSource();
+    void setIncludePaths(const std::vector<std::string> & includePaths);
 
     bool compile();
 	bool isCompiled() const;
     void invalidate();
 
+    GLint get(GLenum pname) const;
+    std::string getSource() const;
     bool checkCompileStatus() const;
 	std::string infoLog() const;
 
     std::string typeString() const;
 
 protected:
-    void notifyChanged();
+    virtual void notifyChanged() override;
 
 
 protected:
     static GLuint create(GLenum type);
-    static void setSource(
-        const Shader & shader
-    ,   const std::string & source);
+    static void setSource(const Shader & shader, const std::string & source);
 
     std::string shaderString() const;
 
 protected:
 	GLenum m_type;
     ref_ptr<StringSource> m_source;
-
-    std::string m_currentSource;
+    std::vector<std::string> m_includePaths;
 
     bool m_compiled;
+    bool m_compilationFailed;
 
+public:
+    static bool forceFallbackIncludeProcessor;
 };
 
 } // namespace glow

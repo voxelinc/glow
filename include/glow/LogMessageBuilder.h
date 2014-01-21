@@ -2,14 +2,22 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
+#include <array>
+#include <memory>
+#include <iomanip>
 
 #include <glm/gtc/type_ptr.hpp>
 
 #include <glow/glow.h>
 #include <glow/LogMessage.h>
+#include <glow/ref_ptr.h>
 
 namespace glow 
 {
+
+template <typename T>
+class Array;
 
 class AbstractLogHandler;
 class Object;
@@ -18,6 +26,7 @@ class FrameBufferObject;
 class Program;
 class Query;
 class RenderBufferObject;
+class Sampler;
 class Shader;
 class Texture;
 class TransformFeedback;
@@ -49,11 +58,17 @@ class Uniform;
 	\see debug
 	\see warning
 */
-class GLOW_API LogMessageBuilder : public std::stringstream
+class GLOW_API LogMessageBuilder
 {
 public:
+    /* These types are unspecified by the C++ standard -> we need to query the compiler specific types
+    */
+    using PrecisionManipulator = decltype(std::setprecision(0));
+    using FillManipulator = decltype(std::setfill('0'));
+    using WidthManipulator = decltype(std::setw(0));
+public:
 	LogMessageBuilder(LogMessage::Level level, AbstractLogHandler* handler);
-	LogMessageBuilder(const LogMessageBuilder& builder);
+    LogMessageBuilder(const LogMessageBuilder& builder);
 	virtual ~LogMessageBuilder();
 
 	// primitive types
@@ -67,33 +82,50 @@ public:
 	LogMessageBuilder& operator<<(long double d);
 	LogMessageBuilder& operator<<(unsigned u);
 	LogMessageBuilder& operator<<(long l);
+    LogMessageBuilder& operator<<(long long l);
 	LogMessageBuilder& operator<<(unsigned long ul);
 	LogMessageBuilder& operator<<(unsigned char uc);
 	LogMessageBuilder& operator<<(void* pointer);
 
 	// manipulators
 	LogMessageBuilder& operator<<(std::ostream& (*manipulator)(std::ostream&));
+    LogMessageBuilder& operator<<(PrecisionManipulator manipulator);
+    LogMessageBuilder& operator<<(FillManipulator manipulator);
+#ifndef _MSC_VER
+	// in windows PrecisionManipulator = WidthManipulator
+    LogMessageBuilder& operator<<(WidthManipulator manipulator);
+#endif
 	
 	// glow objects
-	LogMessageBuilder& operator<<(Object* object);
-	LogMessageBuilder& operator<<(Buffer* object);
-	LogMessageBuilder& operator<<(FrameBufferObject* object);
-	LogMessageBuilder& operator<<(Program* object);
-	LogMessageBuilder& operator<<(Query* object);
-	LogMessageBuilder& operator<<(RenderBufferObject* object);
-	LogMessageBuilder& operator<<(Shader* object);
-	LogMessageBuilder& operator<<(Texture* object);
-	LogMessageBuilder& operator<<(TransformFeedback* object);
-	LogMessageBuilder& operator<<(VertexArrayObject* object);
+    LogMessageBuilder& operator<<(Object* object);
+    LogMessageBuilder& operator<<(Buffer* object);
+    LogMessageBuilder& operator<<(FrameBufferObject* object);
+    LogMessageBuilder& operator<<(Program* object);
+    LogMessageBuilder& operator<<(Query* object);
+    LogMessageBuilder& operator<<(RenderBufferObject* object);
+    LogMessageBuilder& operator<<(Sampler* object);
+    LogMessageBuilder& operator<<(Shader* object);
+    LogMessageBuilder& operator<<(Texture* object);
+    LogMessageBuilder& operator<<(TransformFeedback* object);
+    LogMessageBuilder& operator<<(VertexArrayObject* object);
     LogMessageBuilder& operator<<(AbstractUniform* uniform);
     template <typename T>
     LogMessageBuilder& operator<<(Uniform<T>* uniform);
     LogMessageBuilder& operator<<(const Version& version);
+    template <typename T>
+    LogMessageBuilder& operator<<(ref_ptr<T> ref_pointer);
 	
-
 	// pointers
 	template <typename T>
-	LogMessageBuilder& operator<<(T* t_pointer);
+    LogMessageBuilder& operator<<(T* pointer);
+
+    // array types
+    template <typename T>
+    LogMessageBuilder& operator<<(const Array<T>& array);
+    template <typename T>
+    LogMessageBuilder& operator<<(const std::vector<T>& vector);
+    template <typename T, std::size_t Count>
+    LogMessageBuilder& operator<<(const std::array<T, Count>& array);
 
 	// glm types
 	LogMessageBuilder& operator<<(const glm::vec2& v);
@@ -110,8 +142,7 @@ public:
 protected:
 	LogMessage::Level m_level;
 	AbstractLogHandler* m_handler;
-
-    void logObject(const std::string& type, Object* object);
+    std::shared_ptr<std::stringstream> m_stream;
 };
 
 } // namespace glow

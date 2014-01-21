@@ -69,7 +69,7 @@ public:
 	Program();
 	virtual ~Program();
 
-	virtual void accept(ObjectVisitor& visitor);
+    virtual void accept(ObjectVisitor& visitor) override;
 
 	void use();
 	void release();
@@ -121,6 +121,7 @@ public:
 	void dispatchCompute(GLuint numGroupsX, GLuint numGroupsY, GLuint numGroupsZ);
     void dispatchCompute(const glm::uvec3 & numGroups);
     void dispatchComputeGroupSize(GLuint numGroupsX, GLuint numGroupsY, GLuint numGroupsZ, GLuint groupSizeX, GLuint groupSizeY, GLuint groupSizeZ);
+    void dispatchComputeGroupSize(const glm::uvec3 & numGroups, const glm::uvec3 & groupSizes);
 protected:
     void attach();
 
@@ -131,7 +132,7 @@ protected:
 
 	// ChangeListener Interface
 
-	virtual void notifyChanged();
+    virtual void notifyChanged() override;
 
 protected:
 	static GLuint createProgram();

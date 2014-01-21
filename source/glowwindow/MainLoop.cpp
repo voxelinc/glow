@@ -1,12 +1,14 @@
+#include <glowwindow/MainLoop.h>
 
 #include <cassert>
 #include <string>
 #include <iomanip>
 
+#include <GL/glew.h>
+
 #include <GLFW/glfw3.h>
 
 #include <glow/logging.h>
-#include <glow/Timer.h>
 
 #include <glowwindow/Context.h>
 #include <glowwindow/WindowEventHandler.h>
@@ -14,8 +16,6 @@
 #include <glowwindow/events.h>
 
 #include "WindowEventDispatcher.h"
-
-#include <glowwindow/MainLoop.h>
 
 namespace glowwindow
 {

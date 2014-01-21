@@ -134,7 +134,7 @@ void WindowEventDispatcher::checkForTimerEvents()
                 dispatchEvent(window, new TimerEvent(id));
                 if (timer.singleShot)
                 {
-                    discarded.push_back(std::pair<Window*, int>(window, id));
+                    discarded.emplace_back(window, id);
                 }
                 else
                 {
@@ -213,7 +213,7 @@ void WindowEventDispatcher::handleCursorPos(GLFWwindow* glfwWindow, double xPos,
     dispatchEvent(glfwWindow, new MouseEvent(glm::ivec2(std::floor(xPos), std::floor(yPos))));
 }
 
-void WindowEventDispatcher::handleCursorEnter(GLFWwindow* glfwWindow, int entered)
+void WindowEventDispatcher::handleCursorEnter(GLFWwindow* /*glfwWindow*/, int /*entered*/)
 {
     // TODO: implement
 }

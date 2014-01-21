@@ -22,49 +22,44 @@ void ObjectVisitor::visit(Object* object)
 	object->accept(*this);
 }
 
-void ObjectVisitor::visitBuffer(Buffer* buffer)
+void ObjectVisitor::visitBuffer(Buffer* /*buffer*/)
 {
-    assert(buffer != nullptr);
 }
 
-void ObjectVisitor::visitFrameBufferObject(FrameBufferObject* fbo)
+void ObjectVisitor::visitFrameBufferObject(FrameBufferObject* /*fbo*/)
 {
-    assert(fbo != nullptr);
 }
 
-void ObjectVisitor::visitProgram(Program* program)
+void ObjectVisitor::visitProgram(Program* /*program*/)
 {
-    assert(program != nullptr);
 }
 
-void ObjectVisitor::visitQuery(Query* query)
+void ObjectVisitor::visitQuery(Query* /*query*/)
 {
-    assert(query != nullptr);
 }
 
-void ObjectVisitor::visitRenderBufferObject(RenderBufferObject* rbo)
+void ObjectVisitor::visitRenderBufferObject(RenderBufferObject* /*rbo*/)
 {
-    assert(rbo != nullptr);
 }
 
-void ObjectVisitor::visitShader(Shader* shader)
+void ObjectVisitor::visitSampler(Sampler * /*sampler*/)
 {
-    assert(shader != nullptr);
 }
 
-void ObjectVisitor::visitTexture(Texture* texture)
+void ObjectVisitor::visitShader(Shader* /*shader*/)
 {
-    assert(texture != nullptr);
 }
 
-void ObjectVisitor::visitTransformFeedback(TransformFeedback* transformfeedback)
+void ObjectVisitor::visitTexture(Texture* /*texture*/)
 {
-    assert(transformfeedback != nullptr);
 }
 
-void ObjectVisitor::visitVertexArrayObject(VertexArrayObject* vao)
+void ObjectVisitor::visitTransformFeedback(TransformFeedback* /*transformfeedback*/)
 {
-    assert(vao != nullptr);
+}
+
+void ObjectVisitor::visitVertexArrayObject(VertexArrayObject* /*vao*/)
+{
 }
 
 } // namespace glow

@@ -4,7 +4,8 @@
 #include <GL/glew.h>
 
 #include <glow/Error.h>
-#include <glow/Screen.h>
+#include <glow/debugmessageoutput.h>
+
 #include <glowwindow/Window.h>
 #include <glowwindow/ContextFormat.h>
 #include <glowwindow/Context.h>
@@ -23,22 +24,30 @@ public:
     {
     }
 
-    virtual void initialize(Window & window) override
+    virtual void initialize(Window & ) override
     {
-        glow::DebugMessageOutput::enable();
+        glow::debugmessageoutput::enable();
 
         glClearColor(1.f, 1.f, 1.f, 1.f);
+        CheckGLError();
     }
 
-    virtual void resizeEvent(ResizeEvent & event) override
+    virtual void framebufferResizeEvent(ResizeEvent & event) override
     {
         glViewport(0, 0, event.width(), event.height());
+        CheckGLError();
     }
 
     virtual void paintEvent(PaintEvent &) override
     {
-        glClearColor(rand() / static_cast<float>(RAND_MAX), rand() / static_cast<float>(RAND_MAX), rand() / static_cast<float>(RAND_MAX), 1.f);
+        glClearColor(
+            static_cast<float>(rand()) / static_cast<float>(RAND_MAX),
+            static_cast<float>(rand()) / static_cast<float>(RAND_MAX),
+            static_cast<float>(rand()) / static_cast<float>(RAND_MAX),
+            1.f);
+        CheckGLError();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
     }
 
     virtual void idle(Window & window) override
@@ -52,7 +61,7 @@ public:
     single event handler. This allows, e.g., reuse of painting functionality
     with minor, windows specific variations (e.g., different views).
 */
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
     ContextFormat format;
     format.setVersion(3, 0);

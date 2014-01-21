@@ -1,12 +1,12 @@
 
 #include <cassert>
 #include <string>
-#include <iomanip>
+
+#include <GL/glew.h>
 
 #include <GLFW/glfw3.h>
 
 #include <glow/logging.h>
-#include <glow/Timer.h>
 
 #include <glowwindow/Context.h>
 #include <glowwindow/WindowEventHandler.h>
@@ -30,15 +30,9 @@ const std::set<Window*>& Window::instances()
 
 Window::Window()
 :   m_context(nullptr)
+,   m_window(nullptr)
 ,   m_quitOnDestroy(true)
 ,   m_mode(WindowMode)
-,   m_title("")
-,   m_timer(nullptr)
-,   m_swapts(0.0)
-,   m_swaps(0)
-,   m_window(nullptr)
-,   m_width(0)
-,   m_height(0)
 {
     s_instances.insert(this);
 }
@@ -46,12 +40,18 @@ Window::Window()
 Window::~Window()
 {
     s_instances.erase(this);
-    WindowEventDispatcher::deregisterWindow(this);
+
+    if (m_context)
+    {
+        finalizeEventHandler();
+        WindowEventDispatcher::deregisterWindow(this);
+        destroyContext();
+    }
 
     if (s_instances.empty())
+    {
         MainLoop::quit(0);
-
-    delete m_timer;    
+    }
 }
 
 WindowEventHandler * Window::eventHandler() const
@@ -66,12 +66,56 @@ Context * Window::context() const
 
 int Window::width() const
 {
-    return m_width;
+    return size().x;
 }
 
 int Window::height() const
 {
-    return m_height;
+    return size().y;
+}
+
+glm::ivec2 Window::size() const
+{
+    if (!m_window)
+        return glm::ivec2();
+
+    int w, h;
+    glfwGetWindowSize(m_window, &w, &h);
+    return glm::ivec2(w, h);
+}
+
+glm::ivec2 Window::position() const
+{
+    if (!m_window)
+        return glm::ivec2();
+
+    int x, y;
+    glfwGetWindowPos(m_window, &x, &y);
+    return glm::ivec2(x, y);
+}
+
+glm::ivec2 Window::framebufferSize() const
+{
+    if (!m_window)
+        return glm::ivec2();
+
+    int w, h;
+    glfwGetFramebufferSize(m_window, &w, &h);
+    return glm::ivec2(w, h);
+}
+
+void Window::setTitle(const std::string & title)
+{
+    if (!m_window)
+        return;
+
+    m_title = title;
+    glfwSetWindowTitle(m_window, m_title.c_str());
+}
+
+const std::string & Window::title() const
+{
+    return m_title;
 }
 
 void Window::quitOnDestroy(const bool enable)
@@ -79,62 +123,86 @@ void Window::quitOnDestroy(const bool enable)
     m_quitOnDestroy = enable;
 }
 
-bool Window::create(
-    const ContextFormat & format
-,   const std::string & title
-,   int width
-,   int height)
+bool Window::create(const ContextFormat & format, const std::string & title, int width, int height)
+{
+    if (create(format, width, height))
+    {
+        setTitle(title);
+        return true;
+    }
+
+    return false;
+}
+
+bool Window::create(const ContextFormat & format, int width, int height)
 {
     assert(nullptr == m_context);
 
-    m_context = new Context();
-    if (!m_context->create(format, width, height))
-    {
-        delete m_context;
-        m_context = nullptr;
-
-        return false;
-    }
-
-    m_window = m_context->window();
-    if (!m_window)
+    if (!createContext(format, width, height))
     {
         fatal() << "Creating native window with OpenGL context failed.";
         return false;
     }
 
-    m_width = width;
-    m_height = height;
-
-    setTitle(title);
-
     WindowEventDispatcher::registerWindow(this);
+    initializeEventHandler();
 
-    promoteContext();
+    m_windowedModeSize = glm::ivec2(width, height);
 
     return true;
 }
 
-void Window::setTitle(const std::string & title)
+bool Window::createContext(const ContextFormat & format, int width, int height, GLFWmonitor* monitor)
 {
-    m_title = title;
+    assert(nullptr == m_context);
 
-    if (!m_window)
-        return;
+    m_context = new Context();
 
-    glfwSetWindowTitle(m_window, m_title.c_str());
+    if (m_context->create(format, width, height, monitor))
+    {
+        m_window = m_context->window();
+    }
+    else
+    {
+        delete m_context;
+        m_context = nullptr;
+        m_window = nullptr;
+
+        return false;
+    }
+
+    return true;
 }
 
-void Window::promoteContext()
+void Window::destroyContext()
+{
+    m_context->release();
+    delete m_context;
+
+    m_context = nullptr;
+    m_window = nullptr;
+}
+
+void Window::initializeEventHandler()
 {
     if (m_eventHandler)
     {
-         m_context->makeCurrent();
-         m_eventHandler->initialize(*this);
-         m_context->doneCurrent();
+        m_context->makeCurrent();
+        m_eventHandler->initialize(*this);
+        m_context->doneCurrent();
 
-         queueEvent(new ResizeEvent(glm::ivec2(m_width, m_height)));
-         queueEvent(new ResizeEvent(glm::ivec2(m_width, m_height), true));
+        queueEvent(new ResizeEvent(size()));
+        queueEvent(new ResizeEvent(framebufferSize(), true));
+    }
+}
+
+void Window::finalizeEventHandler()
+{
+    if (m_eventHandler)
+    {
+        m_context->makeCurrent();
+        m_eventHandler->finalize(*this);
+        m_context->doneCurrent();
     }
 }
 
@@ -161,22 +229,56 @@ void Window::hide()
 
 void Window::fullScreen()
 {
-    //if (WindowMode != m_mode)
-    //    return;
+    if (WindowMode != m_mode)
+        return;
 
-    //m_mode = TransitionMode;
-    //m_window->fullScreen();
-    //m_mode = FullScreenMode;
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    if (!monitor)
+        return;
+
+    m_windowedModeSize = size();
+
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    int w = mode->width;
+    int h = mode->height;
+
+    ContextFormat format = m_context->format();
+
+    finalizeEventHandler();
+    WindowEventDispatcher::deregisterWindow(this);
+    destroyContext();
+
+    if (createContext(format, w, h, monitor))
+    {
+        WindowEventDispatcher::registerWindow(this);
+        initializeEventHandler();
+
+        m_mode = FullScreenMode;
+    }
 }
 
 void Window::windowed()
 {
-    //if (FullScreenMode != m_mode)
-    //    return;
+    if (FullScreenMode != m_mode)
+        return;
 
-    //m_mode = TransitionMode;
-    //m_window->windowed();
-    //m_mode = WindowMode;
+    int w = m_windowedModeSize.x;
+    int h = m_windowedModeSize.y;
+
+    ContextFormat format = m_context->format();
+
+    finalizeEventHandler();
+    WindowEventDispatcher::deregisterWindow(this);
+    destroyContext();
+
+
+    if (createContext(format, w, h, nullptr))
+    {
+        WindowEventDispatcher::registerWindow(this);
+        initializeEventHandler();
+
+        m_mode = WindowMode;
+    }
 }
 
 bool Window::isFullScreen() const
@@ -193,14 +295,12 @@ void Window::toggleMode()
 {
     switch (m_mode)
     {
-    case TransitionMode:
-        return;
-    case FullScreenMode:
-        windowed();
-        return;
-    case WindowMode:
-        fullScreen();
-        return;
+        case FullScreenMode:
+            windowed();
+            return;
+        case WindowMode:
+            fullScreen();
+            return;
     }
 }
 
@@ -217,17 +317,31 @@ void Window::setEventHandler(WindowEventHandler * eventHandler)
     if (!m_context)
         return;
 
-    promoteContext();
+    initializeEventHandler();
 }
 
-void Window::resize(
-    const int width
-,   const int height)
+void Window::resize(int width, int height)
 {
     if (!m_window)
         return;
 
     glfwSetWindowSize(m_window, width, height);
+}
+
+int Window::inputMode(int mode) const
+{
+    if (!m_window)
+        return -1;
+
+    return glfwGetInputMode(m_window, mode);
+}
+
+void Window::setInputMode(int mode, int value)
+{
+    if (!m_window)
+        return;
+
+    glfwSetInputMode(m_window, mode, value);
 }
 
 void Window::repaint()
@@ -243,48 +357,20 @@ void Window::close()
 void Window::idle()
 {
     if (m_eventHandler)
+    {
         m_eventHandler->idle(*this);
+    }
 }
 
 void Window::swap()
 {
-    if (!m_timer)
-    {
-        m_timer = new Timer(true, false);
-        m_swapts = 0.0;
-    }
-
     m_context->swap();
-
-    m_timer->update();
-
-    ++m_swaps;
-
-    if (m_timer->elapsed() - m_swapts >= 1e+9)
-    {
-        const float fps = 1e+9f * static_cast<float>(static_cast<long double>
-            (m_swaps) / (m_timer->elapsed() - m_swapts));
-
-        std::stringstream fpss;
-        fpss << m_title << " (" << std::fixed << std::setprecision(2) << fps << " fps)";
-
-        glfwSetWindowTitle(m_window, fpss.str().c_str());
-
-        m_swapts = m_timer->elapsed();
-        m_swaps = 0;
-    }
 }
 
 void Window::destroy()
 {
-    m_context->release();
-
-    delete m_context;
-    m_context = nullptr;
-    m_window = nullptr;
-
-    if (m_eventHandler)
-        m_eventHandler->finalize(*this);
+    finalizeEventHandler();
+    destroyContext();
 
     if (m_quitOnDestroy)
         MainLoop::quit(0);
@@ -342,43 +428,21 @@ void Window::processEvent(WindowEvent & event)
         m_eventHandler->handleEvent(event);
     }
 
-    finishEvent(event);
+    postprocessEvent(event);
 }
 
-void Window::finishEvent(WindowEvent & event)
-{
-    if (event.type() == WindowEvent::Paint)
-    {
-        swap();
-    }
-    else if (!event.isAccepted())
-    {
-        defaultEventAction(event);
-    }
-}
-
-void Window::defaultEventAction(WindowEvent & event)
+void Window::postprocessEvent(WindowEvent & event)
 {
     switch (event.type())
     {
-        case WindowEvent::Close:
-            destroy();
+        case WindowEvent::Paint:
+            swap();
             break;
-
-        case WindowEvent::KeyPress:
-            KeyEvent& keyEvent = static_cast<KeyEvent&>(event);
-            switch (keyEvent.key())
-            {
-                case GLFW_KEY_ESCAPE:
-                    close();
-                    break;
-                case GLFW_KEY_ENTER:
-                    if ((keyEvent.modifiers() & GLFW_MOD_ALT) != 0)
-                    {
-                        toggleMode();
-                    }
-                    break;
-            }
+        case WindowEvent::Close:
+            if (!event.isAccepted())
+                destroy();
+            break;
+        default:
             break;
     }
 }

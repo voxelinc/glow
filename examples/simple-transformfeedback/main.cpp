@@ -19,10 +19,12 @@
 #include <glow/VertexAttributeBinding.h>
 #include <glow/logging.h>
 #include <glow/TransformFeedback.h>
-#include <glow/Timer.h>
+#include <glow/debugmessageoutput.h>
 
+#include <glowutils/Timer.h>
 #include <glowutils/FileRegistry.h>
 #include <glowutils/File.h>
+#include <glowutils/global.h>
 
 #include <glowwindow/Window.h>
 #include <glowwindow/ContextFormat.h>
@@ -47,11 +49,12 @@ public:
 	void createAndSetupGeometry();
     void createAndSetupTransformFeedback();
 
-    virtual void initialize(Window & window) override
+    virtual void initialize(Window & ) override
     {
-        glow::DebugMessageOutput::enable();
+        glow::debugmessageoutput::enable();
 
         glClearColor(0.2f, 0.3f, 0.4f, 1.f);
+        CheckGLError();
 
 	    createAndSetupShaders();
 	    createAndSetupGeometry();
@@ -60,13 +63,14 @@ public:
         m_timer.start();
     }
     
-    virtual void resizeEvent(ResizeEvent & event) override
+    virtual void framebufferResizeEvent(ResizeEvent & event) override
     {
         int width = event.width();
         int height = event.height();
-
     	int side = std::min<int>(width, height);
+
 	    glViewport((width - side) / 2, (height - side) / 2, side, side);
+        CheckGLError();
 
 	    m_shaderProgram->setUniform("modelView", glm::mat4());
         m_shaderProgram->setUniform("projection", glm::ortho(-0.4f, 1.4f, -0.4f, 1.4f, 0.f, 1.f));
@@ -75,6 +79,7 @@ public:
     virtual void paintEvent(PaintEvent &) override
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
 
         glow::Buffer* drawBuffer = m_vertexBuffer1;
         glow::Buffer* writeBuffer = m_vertexBuffer2;
@@ -84,15 +89,12 @@ public:
         m_transformFeedbackProgram->setUniform("deltaT", float(m_timer.elapsed() * float(std::nano::num) / float(std::nano::den)));
         m_timer.reset();
 
-        m_vao->disable(m_shaderProgram->getAttributeLocation("in_position"));
-        m_vao->disable(m_shaderProgram->getAttributeLocation("in_color"));
         m_vao->binding(0)->setBuffer(drawBuffer, 0, sizeof(glm::vec4));
-        m_vao->binding(0)->setAttribute(m_transformFeedbackProgram->getAttributeLocation("in_position"));
-        m_vao->enable(m_transformFeedbackProgram->getAttributeLocation("in_position"));
 
         writeBuffer->bindBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0);
 
         glEnable(GL_RASTERIZER_DISCARD);
+        CheckGLError();
         m_transformFeedbackProgram->use();
         m_transformFeedback->bind();
         m_transformFeedback->begin(GL_TRIANGLES);
@@ -100,12 +102,9 @@ public:
         m_transformFeedback->end();
         m_transformFeedback->unbind();
         glDisable(GL_RASTERIZER_DISCARD);
+        CheckGLError();
 
-        m_vao->disable(m_transformFeedbackProgram->getAttributeLocation("in_position"));
         m_vao->binding(0)->setBuffer(writeBuffer, 0, sizeof(glm::vec4));
-        m_vao->binding(0)->setAttribute(m_shaderProgram->getAttributeLocation("in_position"));
-        m_vao->enable(m_shaderProgram->getAttributeLocation("in_position"));
-        m_vao->enable(m_shaderProgram->getAttributeLocation("in_color"));
 
         m_shaderProgram->use();
         m_transformFeedback->draw(GL_TRIANGLE_STRIP);
@@ -139,13 +138,13 @@ protected:
     glow::ref_ptr<glow::Buffer> m_vertexBuffer2;
     glow::ref_ptr<glow::Buffer> m_colorBuffer;
 
-    glow::Timer m_timer;
+    glowutils::Timer m_timer;
 };
 
 
 /** This example shows a simple point which walks a circle using transform feedback.
 */
-int main(int argc, char** argv)
+int main(int /*argc*/, char* /*argv*/[])
 {
     ContextFormat format;
     format.setVersion(4, 0);
@@ -175,7 +174,6 @@ void EventHandler::createAndSetupShaders()
     m_shaderProgram->attach(
         glowutils::createShaderFromFile(GL_VERTEX_SHADER, "data/transformfeedback/simple.vert")
     ,   glowutils::createShaderFromFile(GL_FRAGMENT_SHADER, "data/transformfeedback/simple.frag"));
-	m_shaderProgram->bindFragDataLocation(0, "fragColor");
 
     m_transformFeedbackProgram = new glow::Program();
     m_transformFeedbackProgram->attach(
@@ -212,15 +210,15 @@ void EventHandler::createAndSetupGeometry()
 
 	m_vao = new glow::VertexArrayObject();
 
-    m_vao->binding(0)->setAttribute(m_shaderProgram->getAttributeLocation("in_position"));
+    m_vao->binding(0)->setAttribute(0);
     m_vao->binding(0)->setFormat(4, GL_FLOAT);
 
-    m_vao->binding(1)->setAttribute(m_shaderProgram->getAttributeLocation("in_color"));
+    m_vao->binding(1)->setAttribute(1);
     m_vao->binding(1)->setBuffer(m_colorBuffer, 0, sizeof(glm::vec4));
     m_vao->binding(1)->setFormat(4, GL_FLOAT);
 
-    m_vao->enable(m_shaderProgram->getAttributeLocation("in_position"));
-    m_vao->enable(m_shaderProgram->getAttributeLocation("in_color"));
+    m_vao->enable(0);
+    m_vao->enable(1);
 }
 
 void EventHandler::createAndSetupTransformFeedback()

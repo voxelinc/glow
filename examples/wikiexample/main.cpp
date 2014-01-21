@@ -2,13 +2,17 @@
 
 #include <glow/Buffer.h>
 #include <glow/Program.h>
+#include <glow/Shader.h>
 #include <glow/VertexArrayObject.h>
 #include <glow/VertexAttributeBinding.h>
+#include <glow/debugmessageoutput.h>
+#include <glow/String.h>
 
 #include <glowwindow/Window.h>
 #include <glowwindow/ContextFormat.h>
 #include <glowwindow/Context.h>
 #include <glowwindow/WindowEventHandler.h>
+#include <glowutils/StringTemplate.h>
 
 using namespace glowwindow;
 
@@ -17,7 +21,7 @@ namespace {
 #version 140
 #extension GL_ARB_explicit_attrib_location : require
 
-in vec2 corner;
+layout (location = 0) in vec2 corner;
 
 out vec4 color;
 
@@ -47,7 +51,7 @@ void main()
 class EventHandler : public WindowEventHandler
 {
 public:
-    EventHandler()
+	EventHandler()
     {
     }
 
@@ -55,45 +59,60 @@ public:
     {
     }
 
-    virtual void initialize(Window & window) override
+    virtual void initialize(Window &) override
     {
-        glow::DebugMessageOutput::enable();
+        glow::debugmessageoutput::enable();
 
         glClearColor(0.2f, 0.3f, 0.4f, 1.f);
+        CheckGLError();
+
+        
+        glowutils::StringTemplate* vertexShaderSource = new glowutils::StringTemplate(new glow::String(vertexShaderCode));
+        glowutils::StringTemplate* fragmentShaderSource = new glowutils::StringTemplate(new glow::String(fragmentShaderCode));
+        
+        
+#ifdef MAC_OS
+        vertexShaderSource->replace("#version 140", "#version 150");
+        fragmentShaderSource->replace("#version 140", "#version 150");
+#endif
+        
+        
+        
+		cornerBuffer = new glow::Buffer(GL_ARRAY_BUFFER);
+		program = new glow::Program();
+		vao = new glow::VertexArrayObject();
+
+		program->attach(
+                        new glow::Shader(GL_VERTEX_SHADER, vertexShaderSource),
+                        new glow::Shader(GL_FRAGMENT_SHADER, fragmentShaderSource)
+                        );
+
+		cornerBuffer->setData(glow::Array<glm::vec2>({
+			glm::vec2(0, 0),
+			glm::vec2(1, 0),
+			glm::vec2(0, 1),
+			glm::vec2(1, 1)
+		}));
+
+        vao->binding(0)->setAttribute(0);
+		vao->binding(0)->setBuffer(cornerBuffer, 0, sizeof(glm::vec2));
+		vao->binding(0)->setFormat(2, GL_FLOAT);
+        vao->enable(0);
     }
     
-    virtual void resizeEvent(ResizeEvent & event) override
+    virtual void framebufferResizeEvent(ResizeEvent & event) override
     {
         glViewport(0, 0, event.width(), event.height());
+        CheckGLError();
     }
 
     virtual void paintEvent(PaintEvent &) override
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
 
-        glow::VertexArrayObject vao;
-        glow::Buffer cornerBuffer(GL_ARRAY_BUFFER);
-        glow::Program program;
-
-        program.attach(
-            glow::Shader::fromString(GL_VERTEX_SHADER, vertexShaderCode),
-            glow::Shader::fromString(GL_FRAGMENT_SHADER, fragmentShaderCode)
-        );
-
-        cornerBuffer.setData(glow::Array<glm::vec2>({
-            glm::vec2(0, 0),
-            glm::vec2(1, 0),
-            glm::vec2(0, 1),
-            glm::vec2(1, 1)
-        }));
-
-        vao.binding(0)->setAttribute(program.getAttributeLocation("corner"));
-        vao.binding(0)->setBuffer(&cornerBuffer, 0, sizeof(glm::vec2));
-        vao.binding(0)->setFormat(2, GL_FLOAT);
-        vao.enable(program.getAttributeLocation("corner"));
-
-        program.use();
-        vao.drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		program->use();
+		vao->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
 
     virtual void idle(Window & window) override
@@ -101,9 +120,14 @@ public:
         window.repaint();
     }
 
+private:
+	glow::VertexArrayObject* vao;
+	glow::Buffer* cornerBuffer;
+	glow::Program* program;
+
 };
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
     ContextFormat format;
     format.setVersion(3, 0);
