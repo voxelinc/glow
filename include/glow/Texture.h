@@ -70,7 +70,7 @@ public:
     ,   GLenum type
     ,   const GLvoid * data);
 
-	void compressedImage2D(
+    void compressedImage2D(
         GLint level
     ,   GLint internalFormat
     ,   GLsizei width
@@ -79,7 +79,7 @@ public:
     ,   GLsizei imageSize
     ,   const GLvoid* data);
 
-	void compressedImage2D(
+    void compressedImage2D(
         GLint level
     ,   GLint internalFormat
     ,   GLsizei width
