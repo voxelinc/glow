@@ -53,7 +53,7 @@ bool RawFile<T>::read()
         return false;
     }
 
-    const size_t size = ifs.tellg();
+    const size_t size = static_cast<size_t>(ifs.tellg());
     ifs.seekg(0, std::ios::beg);
 
     m_data.resize(size / sizeof(T));
