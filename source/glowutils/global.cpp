@@ -7,6 +7,7 @@
 #include <glow/Shader.h>
 
 #include <glowutils/File.h>
+#include <glowutils/FileRegistry.h>
 
 #ifdef _MSC_VER
 #include "windows.h"
@@ -63,12 +64,12 @@ namespace glowutils
 
 Shader * createShaderFromFile(const GLenum type, const std::string& fileName)
 {
-    return new Shader(type, new File(fileName));
+    return new Shader(type, FileRegistry::instance().obtain(fileName));
 }
 
 Shader * createShaderFromFile(GLenum type, const std::string & fileName, const std::vector<std::string> & includePaths)
 {
-    return new Shader(type, new File(fileName), includePaths);
+    return new Shader(type, FileRegistry::instance().obtain(fileName), includePaths);
 }
 
 void scanDirectory(const std::string & directory, const std::string & fileExtension)
