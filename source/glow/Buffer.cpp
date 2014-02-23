@@ -123,6 +123,12 @@ void Buffer::setData(GLsizei size, const GLvoid* data, GLenum usage)
 	CheckGLError();
 }
 
+void Buffer::setSubData(GLintptr offset, GLsizei size, const GLvoid* data) {
+    bind();
+    glBufferSubData(m_target, offset, size, data);
+    CheckGLError();
+}
+
 GLint Buffer::getParameter(GLenum pname)
 {
 	bind();

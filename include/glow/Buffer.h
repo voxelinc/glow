@@ -51,6 +51,12 @@ public:
     ,   const GLvoid * data = nullptr
     ,   GLenum usage = GL_STATIC_DRAW);
 
+    void setSubData(
+        GLintptr offset
+    ,   GLsizei size
+    ,   const GLvoid* data);
+
+
 	GLint getParameter(GLenum pname);
 
     // mapping
