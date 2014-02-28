@@ -1,9 +1,7 @@
-
 #pragma once
 #include <string>
 
 #include <glowutils/glowutils.h>
-
 
 namespace glowutils
 {

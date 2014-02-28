@@ -6,7 +6,7 @@
 #include <glow/Program.h>
 
 #include <glowutils/File.h>
-#include <glowutils/FileRegistry.h>
+#include <glowutils/File.h>
 #include <glowutils/ScreenAlignedQuad.h>
 #include <glowutils/global.h>
 
@@ -14,6 +14,7 @@
 #include <glowwindow/Context.h>
 #include <glowwindow/Window.h>
 #include <glowwindow/WindowEventHandler.h>
+#include <glowwindow/events.h>
 
 using namespace glowwindow;
 
@@ -86,7 +87,7 @@ public:
     virtual void keyReleaseEvent(KeyEvent & event) override
     {
         if (GLFW_KEY_F5 == event.key())
-            glowutils::FileRegistry::instance().reloadAll();
+            glowutils::File::reloadAll();
     }
 
 protected:

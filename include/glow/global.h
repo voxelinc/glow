@@ -9,13 +9,13 @@
 #include <glow/glow.h>
 #include <glow/Version.h>
 
-
 namespace glow 
 {
 
-class StringSource;
+class AbstractStringSource;
 
-GLOW_API bool init();
+GLOW_API bool isInitialized();
+GLOW_API bool init(bool showWarnings = false);
 
 GLOW_API std::string getString(GLenum pname);
 GLOW_API std::string getString(GLenum pname, GLuint index);
@@ -30,6 +30,15 @@ GLOW_API GLfloat getFloat(GLenum pname, GLuint index);
 GLOW_API GLdouble getDouble(GLenum pname, GLuint index);
 GLOW_API GLboolean getBoolean(GLenum pname, GLuint index);
 
+GLOW_API std::string vendor();
+GLOW_API std::string renderer();
+GLOW_API std::string versionString();
+GLOW_API GLint majorVersion();
+GLOW_API GLint minorVersion();
+GLOW_API Version version();
+GLOW_API bool isCoreProfile();
+
+GLOW_API std::vector<std::string> getExtensions();
 
 template <int Count>
 GLOW_API std::array<GLint, Count> getIntegers(GLenum pname);
@@ -41,11 +50,11 @@ template <int Count>
 GLOW_API std::array<GLboolean, Count> getBooleans(GLenum pname);
 
 GLOW_API void createNamedString(const std::string& name, const std::string& string, GLenum type = GL_SHADER_INCLUDE_ARB);
-GLOW_API void createNamedString(const std::string& name, StringSource* source, GLenum type = GL_SHADER_INCLUDE_ARB);
+GLOW_API void createNamedString(const std::string& name, AbstractStringSource* source, GLenum type = GL_SHADER_INCLUDE_ARB);
 GLOW_API void deleteNamedString(const std::string& name);
 GLOW_API bool isNamedString(const std::string& name, bool cached = false);
 GLOW_API std::string getNamedString(const std::string& name, bool cached = false);
-GLOW_API StringSource* getNamedStringSource(const std::string& name);
+GLOW_API AbstractStringSource* getNamedStringSource(const std::string& name);
 GLOW_API GLenum getNamedStringType(const std::string& name, bool cached = false);
 
 GLOW_API void enable(GLenum capability);

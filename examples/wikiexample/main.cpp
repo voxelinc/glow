@@ -6,13 +6,15 @@
 #include <glow/VertexArrayObject.h>
 #include <glow/VertexAttributeBinding.h>
 #include <glow/debugmessageoutput.h>
-#include <glow/String.h>
+#include <glow/StaticStringSource.h>
+#include <glow/Array.h>
 
 #include <glowwindow/Window.h>
 #include <glowwindow/ContextFormat.h>
 #include <glowwindow/Context.h>
 #include <glowwindow/WindowEventHandler.h>
 #include <glowutils/StringTemplate.h>
+#include <glowwindow/events.h>
 
 using namespace glowwindow;
 
@@ -67,8 +69,8 @@ public:
         CheckGLError();
 
         
-        glowutils::StringTemplate* vertexShaderSource = new glowutils::StringTemplate(new glow::String(vertexShaderCode));
-        glowutils::StringTemplate* fragmentShaderSource = new glowutils::StringTemplate(new glow::String(fragmentShaderCode));
+        glowutils::StringTemplate* vertexShaderSource = new glowutils::StringTemplate(new glow::StaticStringSource(vertexShaderCode));
+        glowutils::StringTemplate* fragmentShaderSource = new glowutils::StringTemplate(new glow::StaticStringSource(fragmentShaderCode));
         
         
 #ifdef MAC_OS

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
-#include <set>
 #include <vector>
+
+#include <GL/glew.h>
 
 #include <glow/glow.h>
 
@@ -15,14 +16,13 @@
 
 namespace glow 
 {
-class StringSource;
+class AbstractStringSource;
 class Program;
 
 /** \brief Encapsulates OpenGL shaders.
     
-    A shader can be constructed using fromFile() or fromString() for either 
-    shaders from a file or shaders from a string. The shader source later can
-    be changed using setSource(). A shader can be attached to a program using 
+    A shader can be constructed using an AbstractStringSource.
+    A shader can be attached to a program using
     Program::attach(). A Shader subclasses either ChangeListener and Changeable
     to react to changing shader sources and to propagate this change to 
     ChangeListeners.
@@ -42,8 +42,8 @@ public:
 
 public:
 	Shader(const GLenum type);
-    Shader(const GLenum type, StringSource * source);
-    Shader(const GLenum type, StringSource * source, const std::vector<std::string> & includePaths);
+    Shader(const GLenum type, AbstractStringSource * source);
+    Shader(const GLenum type, AbstractStringSource * source, const std::vector<std::string> & includePaths);
 
 	virtual ~Shader();
 
@@ -51,9 +51,9 @@ public:
 
 	GLenum type() const;
 
-    void setSource(StringSource * source);
+    void setSource(AbstractStringSource * source);
 	void setSource(const std::string & source);
-    const StringSource* source() const;
+    const AbstractStringSource* source() const;
     void updateSource();
     void setIncludePaths(const std::vector<std::string> & includePaths);
 
@@ -69,7 +69,7 @@ public:
     std::string typeString() const;
 
 protected:
-    virtual void notifyChanged() override;
+    virtual void notifyChanged(Changeable * changebale) override;
 
 
 protected:
@@ -80,7 +80,7 @@ protected:
 
 protected:
 	GLenum m_type;
-    ref_ptr<StringSource> m_source;
+    ref_ptr<AbstractStringSource> m_source;
     std::vector<std::string> m_includePaths;
 
     bool m_compiled;

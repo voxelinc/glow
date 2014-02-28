@@ -1,11 +1,10 @@
+#include <glow/Buffer.h>
+
 #include <cassert>
 
 #include <glow/Error.h>
-#include <glow/logging.h>
 #include <glow/ObjectVisitor.h>
 #include <glow/AbstractArray.h>
-
-#include <glow/Buffer.h>
 
 namespace glow
 {
@@ -103,12 +102,14 @@ void* Buffer::mapRange(GLintptr offset, GLsizeiptr length, GLbitfield access)
     return result;
 }
 
-void Buffer::unmap()
+bool Buffer::unmap()
 {
     bind();
 
-    glUnmapBuffer(m_target);
+    GLboolean success = glUnmapBuffer(m_target);
 	CheckGLError();
+
+    return success == GL_TRUE;
 }
 
 void Buffer::setData(const AbstractArray& data, GLenum usage)
@@ -123,11 +124,17 @@ void Buffer::setData(GLsizei size, const GLvoid* data, GLenum usage)
 	CheckGLError();
 }
 
-void Buffer::setSubData(GLintptr offset, GLsizei size, const GLvoid* data) {
+void Buffer::setSubData(const glow::AbstractArray &data, GLintptr offset) {
+    setSubData(data.rawSize(), offset, data.rawData());
+}
+    
+void Buffer::setSubData (GLsizeiptr size, GLintptr offset, const GLvoid* data) {
+    
     bind();
     glBufferSubData(m_target, offset, size, data);
     CheckGLError();
 }
+
 
 GLint Buffer::getParameter(GLenum pname)
 {

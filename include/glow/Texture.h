@@ -1,10 +1,12 @@
 #pragma once
 
+#include <GL/glew.h>
+
+#include <glm/glm.hpp>
+
 #include <glow/glow.h>
 #include <glow/Object.h>
 #include <glow/TextureHandle.h>
-
-#include <glm/glm.hpp>
 
 namespace glow 
 {
@@ -88,6 +90,27 @@ public:
     ,   GLsizei imageSize
     ,   const GLvoid* data
     ,   GLenum targetOverride);
+
+    void image2D(
+        GLenum target
+    ,   GLint level
+    ,   GLenum internalFormat
+    ,   GLsizei width
+    ,   GLsizei height
+    ,   GLint border
+    ,   GLenum format
+    ,   GLenum type
+    ,   const GLvoid * data);
+
+    void image2D(
+        GLenum target
+    ,   GLint level
+    ,   GLenum internalFormat
+    ,   const glm::ivec2 & size
+    ,   GLint border
+    ,   GLenum format
+    ,   GLenum type
+    ,   const GLvoid * data);
 
     void image3D(
         GLint level

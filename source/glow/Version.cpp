@@ -1,20 +1,21 @@
+#include <glow/Version.h>
 
 #include <sstream>
+#include <set>
 
 #include <glow/global.h>
-#include <glow/LogMessageBuilder.h>
 
-#include <glow/Version.h>
+namespace {
+    static std::set<glow::Version> validVersions =
+    {
+        { 3, 0 }, { 3, 1 }, { 3, 2 }, { 3, 3 },
+        { 4, 0 }, { 4, 1 }, { 4, 2 }, { 4, 3 }, { 4, 4 }
+    };
+}
 
 
 namespace glow 
 {
-
-std::set<Version> Version::s_validVersions = 
-{
-    { 3, 0 }, { 3, 1 }, { 3, 2 }, { 3, 3 }, 
-    { 4, 0 }, { 4, 1 }, { 4, 2 }, { 4, 3 }, { 4, 4 }
-};
 
 Version::Version()
 : majorVersion(0)
@@ -30,7 +31,7 @@ Version::Version(int majorVersion, int minorVersion)
 
 Version Version::current()
 {
-    return Version(currentMajorVersion(), currentMinorVersion());
+    return version();
 }
 
 bool Version::operator<(const Version & version) const
@@ -82,54 +83,19 @@ bool Version::isNull() const
 
 bool Version::isValid() const
 {
-    return s_validVersions.find(*this) != s_validVersions.end();
+    return validVersions.find(*this) != validVersions.end();
 }
 
 Version Version::nearestValidVersion() const
 {
-    std::set<Version>::iterator iterator = s_validVersions.lower_bound(*this);
+    std::set<Version>::iterator iterator = validVersions.lower_bound(*this);
 
-    if (iterator == s_validVersions.end())
+    if (iterator == validVersions.end())
     {
         return *(--iterator);
     }
 
     return *iterator;
-}
-
-std::string Version::vendor()
-{
-    return getString(GL_VENDOR);
-}
-
-std::string Version::renderer()
-{
-    return getString(GL_RENDERER);
-}
-
-std::string Version::versionString()
-{
-    return getString(GL_VERSION);
-}
-
-GLint Version::currentMajorVersion()
-{
-    return getInteger(GL_MAJOR_VERSION);
-}
-
-GLint Version::currentMinorVersion()
-{
-    return getInteger(GL_MINOR_VERSION);
-}
-
-bool Version::currentVersionIsInCoreProfile()
-{
-    if (current()<Version(3,2))
-    {
-        return false;
-    }
-
-    return (getInteger(GL_CONTEXT_PROFILE_MASK) & GL_CONTEXT_CORE_PROFILE_BIT) > 0;
 }
 
 } // namespace glow

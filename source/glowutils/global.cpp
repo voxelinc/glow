@@ -1,13 +1,11 @@
 #include <glowutils/global.h>
 
-#include <vector>
-
 #include <glow/logging.h>
 #include <glow/global.h>
 #include <glow/Shader.h>
 
 #include <glowutils/File.h>
-#include <glowutils/FileRegistry.h>
+
 
 #ifdef _MSC_VER
 #include "windows.h"
@@ -15,6 +13,7 @@
 #else
 #include <dirent.h>
 #endif
+#include "FileRegistry.h"
 
 namespace
 {
@@ -64,12 +63,12 @@ namespace glowutils
 
 Shader * createShaderFromFile(const GLenum type, const std::string& fileName)
 {
-    return new Shader(type, FileRegistry::instance().obtain(fileName));
+    return new Shader(type, FileRegistry::obtain(fileName));
 }
 
 Shader * createShaderFromFile(GLenum type, const std::string & fileName, const std::vector<std::string> & includePaths)
 {
-    return new Shader(type, FileRegistry::instance().obtain(fileName), includePaths);
+    return new Shader(type, FileRegistry::obtain(fileName), includePaths);
 }
 
 void scanDirectory(const std::string & directory, const std::string & fileExtension)

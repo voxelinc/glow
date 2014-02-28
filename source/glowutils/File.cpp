@@ -1,11 +1,11 @@
-
-#include <glow/Shader.h>
-#include <cassert>
-
 #include <glowutils/File.h>
 
-#include <glowutils/FileRegistry.h>
+#include <cassert>
+
+#include <glow/Shader.h>
+
 #include <glowutils/RawFile.h>
+#include "FileRegistry.h"
 
 using namespace glow;
 
@@ -16,12 +16,12 @@ File::File(const std::string & filePath)
 : m_filePath(filePath)
 , m_valid(false)
 {
-    FileRegistry::instance().registerFile(this);
+    FileRegistry::registerFile(this);
 }
 
 File::~File()
 {
-    FileRegistry::instance().deregisterFile(this);
+    FileRegistry::deregisterFile(this);
 }
 
 std::string File::string() const
@@ -46,6 +46,11 @@ void File::reload()
 {
     m_valid = false;
     changed();
+}
+
+void File::reloadAll()
+{
+    FileRegistry::reloadAll();
 }
 
 void File::loadFileContent() const

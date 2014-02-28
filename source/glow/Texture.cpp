@@ -1,13 +1,11 @@
+#include <glow/Texture.h>
 
 #include <algorithm>
 
 #include <glm/gtc/type_ptr.hpp>
 
 #include <glow/Error.h>
-#include <glow/logging.h>
 #include <glow/ObjectVisitor.h>
-
-#include <glow/Texture.h>
 
 namespace glow
 {
@@ -156,6 +154,19 @@ void Texture::compressedImage2D(GLint level, GLint internalFormat, GLsizei width
 
     glCompressedTexImage2D(targetOverride, level, internalFormat, width, height, border, imageSize, data);
     CheckGLError();
+}
+
+void Texture::image2D(GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data)
+{
+    bind();
+
+    glTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
+    CheckGLError();
+}
+
+void Texture::image2D(GLenum target, GLint level, GLenum internalFormat, const glm::ivec2 & size, GLint border, GLenum format, GLenum type, const GLvoid* data)
+{
+    image2D(target, level, internalFormat, size.x, size.y, border, format, type, data);
 }
 
 void Texture::image3D(GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid* data)
