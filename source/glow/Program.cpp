@@ -221,9 +221,6 @@ GLint Program::getAttributeLocation(const std::string& name)
 
 	GLint result = glGetAttribLocation(m_id, name.c_str());
 	CheckGLError();
-
-    assert(result != -1);
-        
 	return result;
 }
 

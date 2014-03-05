@@ -19,7 +19,7 @@ namespace glowutils
 
 int AutoTimer::m_numActiveInstances = 0;
 
-AutoTimer::AutoTimer(std::string info)
+AutoTimer::AutoTimer(const std::string& info)
 :   m_info(info)
 ,   m_index(++m_numActiveInstances)
 ,   m_timer(new Timer(false))
