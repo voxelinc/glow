@@ -1,7 +1,8 @@
 #pragma once
 
-#include <glow/Referenced.h>
 #include <glow/ref_ptr.h>
+
+#include <glow/Referenced.h>
 
 namespace glow 
 {
@@ -99,25 +100,73 @@ ref_ptr<T>::operator bool() const
 template<typename T>
 bool ref_ptr<T>::operator<(const ref_ptr & reference) const
 {
-	return m_referenced<reference.m_referenced;
+    return m_referenced < reference.m_referenced;
 }
 
 template<typename T>
 bool ref_ptr<T>::operator>(const ref_ptr & reference) const
 {
-	return m_referenced>reference.m_referenced;
+    return m_referenced > reference.m_referenced;
 }
 
 template<typename T>
 bool ref_ptr<T>::operator==(const ref_ptr & reference) const
 {
-	return m_referenced==reference.m_referenced;
+    return m_referenced == reference.m_referenced;
 }
 
 template<typename T>
 bool ref_ptr<T>::operator!=(const ref_ptr & reference) const
 {
-	return m_referenced!=reference.m_referenced;
+    return m_referenced != reference.m_referenced;
+}
+
+template<typename T>
+bool ref_ptr<T>::operator<(const T * pointer) const
+{
+    return m_referenced < pointer;
+}
+
+template<typename T>
+bool ref_ptr<T>::operator>(const T * pointer) const
+{
+    return m_referenced > pointer;
+}
+
+template<typename T>
+bool ref_ptr<T>::operator==(const T * pointer) const
+{
+    return m_referenced == pointer;
+}
+
+template<typename T>
+bool ref_ptr<T>::operator!=(const T * pointer) const
+{
+    return m_referenced != pointer;
+}
+
+template<typename T>
+bool ref_ptr<T>::operator<(T * pointer) const
+{
+    return m_referenced < pointer;
+}
+
+template<typename T>
+bool ref_ptr<T>::operator>(T * pointer) const
+{
+    return m_referenced > pointer;
+}
+
+template<typename T>
+bool ref_ptr<T>::operator==(T * pointer) const
+{
+    return m_referenced == pointer;
+}
+
+template<typename T>
+bool ref_ptr<T>::operator!=(T * pointer) const
+{
+    return m_referenced != pointer;
 }
 
 template<typename T>

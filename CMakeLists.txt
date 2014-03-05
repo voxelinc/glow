@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 2.8.9 FATAL_ERROR)
 
 set(META_PROJECT_NAME        "glow")
 set(META_VERSION_MAJOR       "0")
-set(META_VERSION_MINOR       "2")
-set(META_VERSION_PATCH       "1")
+set(META_VERSION_MINOR       "3")
+set(META_VERSION_PATCH       "0")
 set(META_VERSION             "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META_VERSION_PATCH}")
 set(META_AUTHOR_ORGANIZATION "hpicgs group")
 set(META_AUTHOR_DOMAIN       "https://github.com/hpicgs/glow/")
@@ -19,6 +19,7 @@ option(OPTION_LOCAL_INSTALL  "Install to a local directory instead of the system
 option(OPTION_BUILD_STATIC   "Build static libraries" OFF)
 option(OPTION_BUILD_EXAMPLES "Build examples" ON)
 option(OPTION_ERRORS_AS_EXCEPTION "Throw exceptions" OFF)
+option(OPTION_GENERATE_GL_INFO "Automatically generate OpenGL extension and enum information" OFF)
 
 
 # CMAKE CONFIGURATION
@@ -37,8 +38,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 if(OPTION_LIMIT_CONFIGS)
     set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Limited Configs" FORCE)
 endif()
-set (CMAKE_BUILD_TYPE "Debug" CACHE STRING "Use build type 'Debug' per
-default" FORCE)
+if (${CMAKE_BUILD_TYPE})
+    set (CMAKE_BUILD_TYPE "Debug" CACHE STRING "Use build type 'Debug' per default" FORCE)
+endif()
+
+
 
 # Project
 project(${META_PROJECT_NAME} C CXX)
@@ -206,11 +210,22 @@ include_directories(
     ${GLFW_INCLUDE_DIR}
 )
 
+# PREBUILD
+
+set(PREBUILD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/pre-build/generated")
+if (OPTION_GENERATE_GL_INFO)
+	add_subdirectory("pre-build")
+endif()
+include_directories(${PREBUILD_PATH})
+install(FILES ${PREBUILD_PATH}/gl_extensions.h DESTINATION include/glow)
+	
+
 # LIBRARIES
 
 add_subdirectory(source)
 install(FILES glow-config.cmake DESTINATION ".")
 
+add_dependencies(glow prebuild)
 
 # EXAMPLES
 

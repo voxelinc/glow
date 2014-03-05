@@ -1,5 +1,6 @@
-#include <glow/State.h>
 #include <glow/Capability.h>
+
+#include <glow/State.h>
 #include <glow/Error.h>
 #include <glow/global.h>
 
@@ -162,18 +163,6 @@ void DepthRange::apply()
         glDepthRange(nearVal, farVal);
         CheckGLError();
     }
-}
-
-LineWidth::LineWidth(GLfloat width)
-: AbstractCapabilitySetting(T_LineWidth)
-, width(width)
-{
-}
-
-void LineWidth::apply()
-{
-    glLineWidth(width);
-    CheckGLError();
 }
 
 PointSize::PointSize(GLfloat size)

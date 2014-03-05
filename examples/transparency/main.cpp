@@ -12,13 +12,14 @@
 #include <glowwindow/MainLoop.h>
 #include <glowwindow/Context.h>
 #include <glowwindow/WindowEventHandler.h>
+#include <glowwindow/events.h>
 
 #include <glowutils/UnitCube.h>
 #include <glowutils/File.h>
 #include <glowutils/Camera.h>
 #include <glowutils/AbstractCoordinateProvider.h>
 #include <glowutils/WorldInHandNavigation.h>
-#include <glowutils/FileRegistry.h>
+#include <glowutils/File.h>
 #include <glowutils/ScreenAlignedQuad.h>
 #include <glowutils/GlBlendAlgorithm.h>
 #include <glowutils/ABufferAlgorithm.h>
@@ -218,7 +219,7 @@ public:
 		switch (event.key())
 		{
 		case GLFW_KEY_F5:
-			glowutils::FileRegistry::instance().reloadAll();
+			glowutils::File::reloadAll();
 			break;
 		}
 	}

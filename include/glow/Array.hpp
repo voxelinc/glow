@@ -1,14 +1,26 @@
 #pragma once
 
-#include <cassert>
-
 #include <glow/Array.h>
+
+#include <cassert>
 
 namespace glow
 {
 
 template<typename T>
 Array<T>::Array()
+{
+}
+
+template<typename T>
+Array<T>::Array(size_t count)
+: std::vector<T>(count)
+{
+}
+
+template<typename T>
+Array<T>::Array(size_t count, const T& value)
+: std::vector<T>(count, value)
 {
 }
 
@@ -46,6 +58,12 @@ Array<T>::Array(
 :   std::vector<T>(reinterpret_cast<T*>(data), reinterpret_cast<T*>(data) + size / sizeof(T))
 {
     assert(data != nullptr);
+}
+
+template<typename T>
+Array<T>::Array(Array&& other) NOEXCEPT
+: std::vector<T>(other)
+{
 }
 
 template<typename T>

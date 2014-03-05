@@ -4,7 +4,6 @@
 
 #include <glowutils/glowutils.h>
 
-
 namespace glowutils
 {
 
@@ -14,7 +13,7 @@ namespace glowutils
  */
 namespace screen
 {
-    typedef std::multimap<unsigned int, unsigned int> Resolutions;
+    using Resolutions = std::multimap<unsigned int, unsigned int>;
 
     GLOWUTILS_API unsigned int getNumScreens();
 

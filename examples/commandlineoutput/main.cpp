@@ -14,6 +14,7 @@
 #include <glow/Shader.h>
 #include <glow/Buffer.h>
 #include <glow/Query.h>
+#include <glow/Array.h>
 #include <glow/FrameBufferObject.h>
 #include <glow/RenderBufferObject.h>
 #include <glow/Sampler.h>
@@ -83,7 +84,7 @@ public:
         std::cout << "glow::Version = "; glow::info() << glow::Version::current();
 
         std::vector<glow::Buffer*> buffers{new glow::Buffer(), new glow::Buffer()};
-         std::cout << "std::vector<glow::Buffer*> = "; glow::info() << buffers;
+        std::cout << "std::vector<glow::Buffer*> = "; glow::info() << buffers;
 
         window.close();
     }
@@ -94,7 +95,8 @@ public:
 int main(int /*argc*/, char* /*argv*/[])
 {
     glowwindow::ContextFormat format;
-    format.setVersion(3, 0);
+    format.setVersion(3, 2);
+    format.setProfile(glowwindow::ContextFormat::CoreProfile);
 
     glowwindow::Window window;
 

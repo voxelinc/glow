@@ -1,7 +1,7 @@
+#include <glowutils/StringTemplate.h>
+
 #include <sstream>
 #include <cassert>
-
-#include <glowutils/StringTemplate.h>
 
 namespace 
 {
@@ -25,7 +25,7 @@ void replaceAll(
 namespace glowutils 
 {
 
-StringTemplate::StringTemplate(StringSource * source)
+StringTemplate::StringTemplate(AbstractStringSource * source)
 : StringSourceDecorator(source)
 {
 }

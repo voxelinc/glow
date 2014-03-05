@@ -5,6 +5,7 @@
 
 #include <glm/glm.hpp>
 
+#include <glow/glow.h>
 #include <glow/AbstractArray.h>
 
 namespace glow
@@ -37,13 +38,19 @@ class Array : public AbstractArray, public std::vector<T>
 {
 public:
 	Array();
+
+    Array(size_t count);
+    Array(size_t count, const T& value);
+
 	Array(const Array<T> & array);
-	
-	Array(const std::vector<T> & vector);
-	Array(const std::initializer_list<T> & list);
-	
-	Array(T * data, const unsigned size);
-	Array(void * data, const unsigned size);
+
+    Array(const std::vector<T> & vector);
+    Array(const std::initializer_list<T> & list);
+
+    Array(T * data, unsigned size);
+    Array(void * data, unsigned size);
+
+    Array(Array&& other) NOEXCEPT;
 	
     virtual const void * rawData() const override;
     virtual GLint rawSize() const override;
@@ -51,18 +58,18 @@ public:
 	Array & operator<<(const T & element);
 };
 
-typedef Array<float>            FloatArray;
-typedef Array<int>              IntArray;
-typedef Array<unsigned int>     UIntArray;
-typedef Array<char>             ByteArray;
-typedef Array<unsigned char>    UByteArray;
+using FloatArray = Array<float>;
+using IntArray = Array<int>;
+using UIntArray = Array<unsigned int>;
+using ByteArray = Array<char>;
+using UByteArray = Array<unsigned char>;
 
-typedef Array<glm::vec2>        Vec2Array;
-typedef Array<glm::vec3>        Vec3Array;
-typedef Array<glm::vec4>        Vec4Array;
+using Vec2Array = Array<glm::vec2>;
+using Vec3Array = Array<glm::vec3>;
+using Vec4Array = Array<glm::vec4>;
 
-typedef Array<glm::mat3>        Mat3Array;
-typedef Array<glm::mat4>        Mat4Array;
+using Mat3Array = Array<glm::mat3>;
+using Mat4Array = Array<glm::mat4>;
 
 } // namespace glow
 

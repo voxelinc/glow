@@ -30,9 +30,11 @@ set(api_includes
     ${header_path}/AbstractLogHandler.h
     ${header_path}/AbstractUniform.h
     ${header_path}/AbstractArray.h
+    ${header_path}/AbstractStringSource.h
     ${header_path}/Array.h
     ${header_path}/Array.hpp
     ${header_path}/Buffer.h
+    ${header_path}/Buffer.hpp
     ${header_path}/Capability.h
     ${header_path}/Changeable.h
     ${header_path}/ChangeListener.h
@@ -43,6 +45,7 @@ set(api_includes
     ${header_path}/DebugMessage.h
     ${header_path}/debugmessageoutput.h
     ${header_path}/Error.h
+    ${header_path}/Extension.h
     ${header_path}/FrameBufferAttachment.h
     ${header_path}/FrameBufferObject.h
     ${header_path}/formatString.h
@@ -60,6 +63,7 @@ set(api_includes
     ${header_path}/ObjectVisitor.h
     ${header_path}/Program.h
     ${header_path}/Program.hpp
+    ${header_path}/ProgramBinary.h
     ${header_path}/Query.h
     ${header_path}/ref_ptr.h
     ${header_path}/ref_ptr.hpp
@@ -69,8 +73,7 @@ set(api_includes
     ${header_path}/Sampler.h
     ${header_path}/Shader.h
     ${header_path}/State.h
-    ${header_path}/String.h
-    ${header_path}/StringSource.h
+    ${header_path}/StaticStringSource.h
     ${header_path}/Texture.h
     ${header_path}/TextureAttachment.h
     ${header_path}/TextureHandle.h
@@ -85,6 +88,7 @@ set(api_includes
 
 set(sources
     ${source_path}/AbstractUniform.cpp
+    ${source_path}/AbstractStringSource.cpp
     ${source_path}/Buffer.cpp
     ${source_path}/Capability.cpp
     ${source_path}/Changeable.cpp
@@ -92,7 +96,6 @@ set(sources
     ${source_path}/CompositeStringSource.cpp
     ${source_path}/ConsoleLogger.cpp
     ${source_path}/constants.cpp
-    ${source_path}/gl_constants.h
     ${source_path}/contextid.h
     ${source_path}/contextid.cpp
     ${source_path}/DebugInfo.cpp
@@ -101,6 +104,7 @@ set(sources
     ${source_path}/DebugMessageCallback.cpp
     ${source_path}/debugmessageoutput.cpp
     ${source_path}/Error.cpp
+    ${source_path}/Extension.cpp
     ${source_path}/FrameBufferAttachment.cpp
     ${source_path}/FrameBufferObject.cpp
     ${source_path}/formatString.cpp
@@ -117,6 +121,7 @@ set(sources
     ${source_path}/ObjectRegistry.cpp
     ${source_path}/ObjectVisitor.cpp
     ${source_path}/Program.cpp
+    ${source_path}/ProgramBinary.cpp
     ${source_path}/Query.cpp
     ${source_path}/Referenced.cpp
     ${source_path}/RenderBufferAttachment.cpp
@@ -124,8 +129,7 @@ set(sources
     ${source_path}/Sampler.cpp
     ${source_path}/Shader.cpp
     ${source_path}/State.cpp
-    ${source_path}/String.cpp
-    ${source_path}/StringSource.cpp
+    ${source_path}/StaticStringSource.cpp
     ${source_path}/Texture.cpp
     ${source_path}/TextureAttachment.cpp
     ${source_path}/TransformFeedback.cpp

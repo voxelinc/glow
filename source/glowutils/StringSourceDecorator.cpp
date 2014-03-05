@@ -1,11 +1,11 @@
-#include <cassert>
-
 #include <glowutils/StringSourceDecorator.h>
+
+#include <cassert>
 
 namespace glowutils 
 {
 
-StringSourceDecorator::StringSourceDecorator(StringSource * source)
+StringSourceDecorator::StringSourceDecorator(AbstractStringSource * source)
 : m_internal(source)
 {
     assert(source != nullptr);
@@ -20,7 +20,7 @@ StringSourceDecorator::~StringSourceDecorator()
 	m_internal->deregisterListener(this);
 }
 
-void StringSourceDecorator::notifyChanged()
+void StringSourceDecorator::notifyChanged(Changeable *)
 {
 	update();
     changed();

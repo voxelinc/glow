@@ -1,12 +1,11 @@
 #include <glowutils/global.h>
 
-#include <vector>
-
 #include <glow/logging.h>
 #include <glow/global.h>
 #include <glow/Shader.h>
 
 #include <glowutils/File.h>
+
 
 #ifdef _MSC_VER
 #include "windows.h"
@@ -14,6 +13,7 @@
 #else
 #include <dirent.h>
 #endif
+#include "FileRegistry.h"
 
 namespace
 {

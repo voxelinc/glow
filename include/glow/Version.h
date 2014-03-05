@@ -1,8 +1,6 @@
 #pragma once
 
-#include <ostream>
 #include <string>
-#include <set>
 
 #include <GL/glew.h>
 
@@ -22,16 +20,6 @@ public:
 
 	static Version current();
 
-    static std::string vendor();
-    static std::string renderer();
-
-    static Version version();
-    static std::string versionString();
-
-    static GLint currentMajorVersion();
-    static GLint currentMinorVersion();
-    static bool currentVersionIsInCoreProfile();
-
     bool operator< (const Version & version) const;
     bool operator> (const Version & version) const;
     bool operator==(const Version & version) const;
@@ -48,9 +36,6 @@ public:
 public:
     GLint majorVersion;
     GLint minorVersion;
-
-private:
-    static std::set<Version> s_validVersions;
 };
 
 } // namespace glow

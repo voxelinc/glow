@@ -1,3 +1,4 @@
+#include <glow/DebugInfo.h>
 
 #include <sstream>
 #include <algorithm>
@@ -17,15 +18,13 @@
 #include <glow/RenderBufferObject.h>
 #include <glow/Sampler.h>
 #include <glow/Shader.h>
-#include <glow/StringSource.h>
+#include <glow/AbstractStringSource.h>
 #include <glow/Texture.h>
 #include <glow/TransformFeedback.h>
 #include <glow/VertexArrayObject.h>
 #include <glow/VertexAttributeBinding.h>
 #include <glow/TextureAttachment.h>
 #include <glow/RenderBufferAttachment.h>
-
-#include <glow/DebugInfo.h>
 
 namespace glow
 {
@@ -86,10 +85,10 @@ std::vector<DebugInfo::InfoGroup> DebugInfo::generalInfo()
 	memoryInfo.name = "Memory";
 	textureInfo.name = "General Texture Info";
 
-    generalInfo.addProperty("version", Version::current().toString());
-    generalInfo.addProperty("vendor", Version::vendor());
-    generalInfo.addProperty("renderer", Version::renderer());
-    generalInfo.addProperty("core profile", Version::currentVersionIsInCoreProfile()?"true":"false");
+    generalInfo.addProperty("version", versionString());
+    generalInfo.addProperty("vendor", vendor());
+    generalInfo.addProperty("renderer", renderer());
+    generalInfo.addProperty("core profile", isCoreProfile()?"true":"false");
     generalInfo.addProperty("GLSL version", getString(GL_SHADING_LANGUAGE_VERSION));
 
 	memoryInfo.addProperty("total", humanReadableSize(1024ll*memory::total()));

@@ -1,3 +1,4 @@
+#include <map>
 
 #include <GL/glew.h>
 
@@ -19,7 +20,7 @@
 
 #include <glowutils/Camera.h>
 #include <glowutils/File.h>
-#include <glowutils/FileRegistry.h>
+#include <glowutils/File.h>
 #include <glowutils/AbstractCoordinateProvider.h>
 #include <glowutils/WorldInHandNavigation.h>
 #include <glowutils/Timer.h>
@@ -28,6 +29,7 @@
 #include <glowwindow/ContextFormat.h>
 #include <glowwindow/Window.h>
 #include <glowwindow/WindowEventHandler.h>
+#include <glowwindow/events.h>
 
 #include "AbstractParticleTechnique.h"
 
@@ -253,7 +255,7 @@ public:
             break;
 
         case GLFW_KEY_F5:
-            glowutils::FileRegistry::instance().reloadAll();
+            glowutils::File::reloadAll();
             break;
         }
     }

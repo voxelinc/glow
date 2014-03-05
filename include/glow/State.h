@@ -1,19 +1,25 @@
 #pragma once
 
+#include <unordered_map>
+#include <vector>
+
 #include <GL/glew.h>
 
 #include <glow/glow.h>
-#include <glow/Capability.h>
 #include <glow/Referenced.h>
-
-#include <map>
-#include <unordered_map>
-#include <vector>
 
 namespace glow
 {
 
-class State : public Referenced
+class Capability;
+
+namespace capability {
+
+class AbstractCapabilitySetting;
+
+} // namespace capability
+
+class GLOW_API State : public Referenced
 {
 public:
     State();
@@ -39,7 +45,6 @@ public:
     void depthFunc(GLenum func);
     void depthRange(GLdouble nearVal, GLdouble farVal);
     void depthRange(GLfloat nearVal, GLfloat farVal);
-    void lineWidth(GLfloat width);
     void pointSize(GLfloat size);
     void polygonMode(GLenum face, GLenum mode);
     void polygonOffset(GLfloat factor, GLfloat units);

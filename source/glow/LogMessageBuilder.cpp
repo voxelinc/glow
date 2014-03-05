@@ -1,3 +1,5 @@
+#include <glow/LogMessageBuilder.h>
+
 #include <cassert>
 
 #include <glow/logging.h>
@@ -15,8 +17,6 @@
 #include <glow/Version.h>
 #include <glow/AbstractUniform.h>
 #include <glow/ObjectVisitor.h>
-
-#include <glow/LogMessageBuilder.h>
 
 namespace {
 
@@ -102,7 +102,6 @@ LogMessageBuilder::LogMessageBuilder(LogMessage::Level level, AbstractLogHandler
 , m_handler(handler)
 , m_stream(new std::stringstream)
 {
-    assert(handler != nullptr);
 }
 
 LogMessageBuilder::LogMessageBuilder(const LogMessageBuilder& builder)
