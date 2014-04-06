@@ -128,7 +128,7 @@ set_target_properties(${target}
 install(TARGETS ${target}
     RUNTIME DESTINATION ${INSTALL_BIN}
     LIBRARY DESTINATION ${INSTALL_SHARED}
-#    ARCHIVE DESTINATION ${INSTALL_LIB}
+    ARCHIVE DESTINATION ${INSTALL_LIB}
 )
 
 # Header files

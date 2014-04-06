@@ -6,14 +6,12 @@
 
 #include <glowutils/File.h>
 
-
 #ifdef _MSC_VER
 #include "windows.h"
 #include "dirent_msvc.h"
 #else
 #include <dirent.h>
 #endif
-#include "FileRegistry.h"
 
 namespace
 {

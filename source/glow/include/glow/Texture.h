@@ -61,7 +61,9 @@ public:
     void image2D(GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * data);
     void image2D(GLenum target, GLint level, GLenum internalFormat, const glm::ivec2 & size, GLint border, GLenum format, GLenum type, const GLvoid * data);
     void compressedImage2D(GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid * data);
+    void compressedImage2D(GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid * data, GLenum targetOverride);
     void compressedImage2D(GLint level, GLenum internalFormat, const glm::ivec2 & size, GLint border, GLsizei imageSize, const GLvoid * data);
+
     void subImage2D(GLint level, GLint xOffset, GLint yOffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * data);
     void subImage2D(GLint level, const glm::ivec2& offset, const glm::ivec2& size, GLenum format, GLenum type, const GLvoid * data);
 

@@ -125,7 +125,7 @@ void Icosahedron::refine(
 ,   std::vector<Face> & indices
 ,   const unsigned char levels)
 {
-    std::unordered_map<uint, u_int16_t> cache;
+    std::unordered_map<uint, short> cache;
 
     for(int i = 0; i < levels; ++i)
     {
@@ -135,13 +135,13 @@ void Icosahedron::refine(
         {
             Face & face = indices[f];
 
-            const u_int16_t a(face[0]);
-            const u_int16_t b(face[1]);
-            const u_int16_t c(face[2]);
+            const short a(face[0]);
+            const short b(face[1]);
+            const short c(face[2]);
 
-            const u_int16_t ab(split(a, b, vertices, cache));
-            const u_int16_t bc(split(b, c, vertices, cache));
-            const u_int16_t ca(split(c, a, vertices, cache));
+            const short ab(split(a, b, vertices, cache));
+            const short bc(split(b, c, vertices, cache));
+            const short ca(split(c, a, vertices, cache));
 
             face = { ab, bc, ca };
 
@@ -152,11 +152,11 @@ void Icosahedron::refine(
     }
 }
 
-u_int16_t Icosahedron::split(
-    const u_int16_t a
-,   const u_int16_t b
+short Icosahedron::split(
+    const short a
+    , const short b
 ,   std::vector<vec3> & points
-,   std::unordered_map<uint, u_int16_t> & cache)
+, std::unordered_map<uint, short> & cache)
 {
     const bool aSmaller(a < b);
 
@@ -170,7 +170,7 @@ u_int16_t Icosahedron::split(
 
     points.push_back(normalize((points[a] + points[b]) * .5f));
 
-    const u_int16_t i = static_cast<u_int16_t>(points.size() - 1);
+    const short i = static_cast<short>(points.size() - 1);
 
     cache[hash] = i;
 

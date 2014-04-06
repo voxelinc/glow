@@ -23,7 +23,7 @@ include_directories(
 
 include_directories(
     BEFORE
-    ${CMAKE_SOURCE_DIR}/source/glow/include
+    ${GLOW_SOURCE_DIR}/source/glow/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
@@ -184,8 +184,8 @@ set_target_properties(${target}
 install(TARGETS ${target}
     RUNTIME DESTINATION ${INSTALL_BIN}
     LIBRARY DESTINATION ${INSTALL_SHARED}
-#    ARCHIVE DESTINATION ${INSTALL_LIB}
+    ARCHIVE DESTINATION ${INSTALL_LIB}
 )
 
 # Header files
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/${target} DESTINATION ${INSTALL_INCLUDE})
+#install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/${target} DESTINATION ${INSTALL_INCLUDE})

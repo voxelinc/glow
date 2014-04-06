@@ -102,6 +102,7 @@ LogMessageBuilder::LogMessageBuilder(LogMessage::Level level, AbstractLogHandler
 , m_handler(handler)
 , m_stream(new std::stringstream)
 {
+    assert(handler != nullptr);
 }
 
 LogMessageBuilder::LogMessageBuilder(const LogMessageBuilder& builder)
