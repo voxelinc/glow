@@ -151,6 +151,8 @@ const glm::vec3 & Camera::projectionOffset() const
 void Camera::setProjectionOffset(const glm::vec3 & projectionOffset)
 {
     m_projectionOffset = projectionOffset;
+
+    dirty();
 }
 
 const ivec2 & Camera::viewport() const
